@@ -36,12 +36,16 @@ RichText.EditorView = SC.FieldView.extend(
     return this.$('iframe');
   },
 
-  $inputDoc: function(){
-    return this.$input().map(function(){ return this.contentWindow.document; });
+  $inputWindow: function(){
+    return this.$input().map(function(){ return this.contentWindow; });
+  },
+
+  $inputDocument: function(){
+    return this.$inputWindow().map(function(){ return this.document; });
   },
 
   $inputBody: function(){
-    return this.$inputDoc().map(function(){ return this.body; });
+    return this.$inputDocument().map(function(){ return this.body; });
   },
 
 // Accessors
@@ -205,17 +209,17 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   _setupEditor: function(){
-    var inputDoc = this.$inputDoc(),
-        inputDocInstance = inputDoc.get(0),
+    var inputDocument = this.$inputDocument(),
+        inputDocumentInstance = inputDocument.get(0),
         stylesheets = this.get('stylesheets'),
         headers = '', idx;
 
     try {
-      inputDocInstance.designMode = 'on';
+      inputDocumentInstance.designMode = 'on';
     } catch ( e ) {
       // Will fail on Gecko if the editor is placed in an hidden container element
       // The design mode will be set ones the editor is focused
-      inputDoc.focus(function() { inputDocInstance.designMode(); } );
+      inputDocument.focus(function() { inputDocumentInstance.designMode(); } );
     }
 
     for(idx=0; idx < stylesheets.length; idx++) {
@@ -223,20 +227,39 @@ RichText.EditorView = SC.FieldView.extend(
     }
 
     // TODO: Is this the best way to do it?
-    // inputDocInstance.open();
-    inputDocInstance.write("<html><head>%@</head><body></body></html>".fmt(headers));
-    // inputDocInstance.close();
+    // inputDocumentInstance.open();
+    inputDocumentInstance.write("<html><head>%@</head><body></body></html>".fmt(headers));
+    // inputDocumentInstance.close();
 
     this.set('editorIsReady', YES);
 
     this.setFieldValue(this.get('fieldValue'));
 
-    SC.Event.add(this.$inputDoc(), 'keyup', this, this._field_fieldValueDidChange);
+    SC.Event.add(this.$inputDocument(), 'keyup', this, this._field_fieldValueDidChange);
+    SC.Event.add(this.$inputDocument(), 'focus', this, this._field_fieldDidFocus);
+    SC.Event.add(this.$inputDocument(), 'blur', this, this._field_fieldDidBlur);
   },
 
   willDestroyLayer: function() {
-    SC.Event.remove(this.$inputDoc(), 'keyup', this, this._field_fieldValueDidChange);
-    SC.Event.remove(this.$input(), 'load', this, this._setupEditor);
+    SC.Event.remove(this.$inputDocument(), 'blur', this, this._field_fieldDidBlur);
+    SC.Event.remove(this.$inputDocument(), 'focus', this, this._field_fieldDidFocus);
+    SC.Event.remove(this.$inputDocument(), 'keyup', this, this._field_fieldValueDidChange);
+    SC.Event.remove(this.$input(), 'load', this, this._check_iFrameDidLoad);
+  },
+
+  _loseBlur: function(){
+    if (this._isFocused) {
+      this._isFocused = NO;
+      SC.RootResponder.responder.set('richTextEditorHasFocus', NO);
+    }
+  },
+
+  _field_fieldDidFocus: function(){
+    this.becomeFirstResponder();
+  },
+
+  _field_fieldDidBlur: function(){
+    this._loseBlur();
   },
 
   willBecomeKeyResponderFrom: function(keyView) {
@@ -245,9 +268,14 @@ RichText.EditorView = SC.FieldView.extend(
       this._isFocused = YES ;
       this.becomeFirstResponder();
       if (this.get('isVisibleInWindow')) {
-        this.$input().get(0).focus();
+        SC.RootResponder.responder.set('richTextEditorHasFocus', YES);
+        this.$inputWindow().get(0).focus();
       }
     }
+  },
+
+  willLoseKeyResponderTo: function(responder) {
+    this._loseBlur();
   },
 
 // Editor actions
@@ -257,8 +285,8 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   iframeExecCommand: function() {
-    var inputDocInstance = this.$inputDoc().get(0);
-    return inputDocInstance.execCommand.apply(inputDocInstance, arguments);
+    var inputDocumentInstance = this.$inputDocument().get(0);
+    return inputDocumentInstance.execCommand.apply(inputDocumentInstance, arguments);
   }
 
 });
