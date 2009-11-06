@@ -191,21 +191,30 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   didCreateLayer: function() {
-    SC.Event.add(this.$input(), 'load', this, this._check_iFrameDidLoad);
+    SC.Event.add(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
   },
 
-  _check_iFrameDidLoad: function() {
+  _field_checkIFrameDidLoad: function() {
     var iframe = this.$input().get(0);
 
     if (iframe.contentWindow && iframe.contentWindow.document) {
       this.iframeDidLoad();
     } else { 
-      this.invokeLater('_check_iFrameDidLoad', 500);
+      this.invokeLater('_field_checkIFrameDidLoad', 500);
     }
   },
 
   iframeDidLoad: function() {
     this._setupEditor();
+  },
+  
+  _writeDocument: function(headers){
+    if (!headers) headers = '';
+    var inputDocumentInstance = this.$inputDocument().get(0);
+
+    inputDocumentInstance.open();
+    inputDocumentInstance.write("<html><head>%@</head><body></body></html>".fmt(headers));
+    inputDocumentInstance.close();
   },
 
   _setupEditor: function(){
@@ -226,10 +235,7 @@ RichText.EditorView = SC.FieldView.extend(
       headers += '<link rel="stylesheet" href="%@" type="text/css" charset="utf-8">\n'.fmt(stylesheets[idx]);
     }
 
-    // TODO: Is this the best way to do it?
-    // inputDocumentInstance.open();
-    inputDocumentInstance.write("<html><head>%@</head><body></body></html>".fmt(headers));
-    // inputDocumentInstance.close();
+    this._writeDocument(headers);
 
     this.set('editorIsReady', YES);
 
@@ -244,7 +250,7 @@ RichText.EditorView = SC.FieldView.extend(
     SC.Event.remove(this.$inputDocument(), 'blur', this, this._field_fieldDidBlur);
     SC.Event.remove(this.$inputDocument(), 'focus', this, this._field_fieldDidFocus);
     SC.Event.remove(this.$inputDocument(), 'keyup', this, this._field_fieldValueDidChange);
-    SC.Event.remove(this.$input(), 'load', this, this._check_iFrameDidLoad);
+    SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
   },
 
   _loseBlur: function(){
