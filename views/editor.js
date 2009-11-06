@@ -22,7 +22,8 @@ RichText.EditorView = SC.FieldView.extend(
   toolbarView: RichText.ToolbarView,
 
   stylesheets: [],
-
+  loadStylesheetsInline: NO,
+  
   // TODO: Should stylesheets be a display property?
   displayProperties: 'fieldValue isEditing toolbarView'.w(),
 
@@ -205,9 +206,37 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   iframeDidLoad: function() {
-    this._setupEditor();
+    if (!this.get('editorIsReady')) {
+      if (this.get('loadStylesheetsInline')) {
+        this._loadStylesheets();
+      } else {
+        this._setupEditor();
+      }
+    }
   },
-  
+
+  _loadStylesheets: function(){
+    var stylesheets = this.get('stylesheets'), stylesheet_url;
+    this._pendingStylesheets = stylesheets.length;
+
+    for(idx=0; idx < stylesheets.length; idx++) {
+      stylesheet_url = stylesheets[idx];
+
+      if (RichText.EditorView.loadedStylesheets[stylesheet_url]) {
+        // already loaded
+        this._stylesheetDidLoad(stylesheet_url);
+      } else {
+        // Need to load
+        RichText.EditorView.loadStylesheet(stylesheet_url, this, '_stylesheetDidLoad');
+      }
+    }
+  },
+
+  _stylesheetDidLoad: function(url){
+    this._pendingStylesheets -= 1;
+    if (this._pendingStylesheets <= 0) this._setupEditor();
+  },
+
   _writeDocument: function(headers){
     if (!headers) headers = '';
     var inputDocumentInstance = this.$inputDocument().get(0);
@@ -218,10 +247,13 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   _setupEditor: function(){
+    // Already setup
+    if (this.get('editorIsReady')) return;
+
     var inputDocument = this.$inputDocument(),
         inputDocumentInstance = inputDocument.get(0),
         stylesheets = this.get('stylesheets'),
-        headers = '', idx;
+        stylesheet_url, headers = '', idx;
 
     try {
       inputDocumentInstance.designMode = 'on';
@@ -231,8 +263,19 @@ RichText.EditorView = SC.FieldView.extend(
       inputDocument.focus(function() { inputDocumentInstance.designMode(); } );
     }
 
-    for(idx=0; idx < stylesheets.length; idx++) {
-      headers += '<link rel="stylesheet" href="%@" type="text/css" charset="utf-8">\n'.fmt(stylesheets[idx]);
+    if (this.get('loadStylesheetsInline')) {
+      headers += "<style type='text/css'>\n";
+      for(idx=0; idx < stylesheets.length; idx++) {
+        stylesheet_url = stylesheets[idx];
+        headers += "/* BEGIN %@ */\n\n".fmt(stylesheet_url);
+        headers += RichText.EditorView.loadedStylesheets[stylesheet_url];
+        headers += "/* END %@ */\n\n".fmt(stylesheet_url);
+      }
+      headers += "</style>\n";
+    } else {
+      for(idx=0; idx < stylesheets.length; idx++) {
+        headers += '<link rel="stylesheet" href="%@" type="text/css" charset="utf-8">\n'.fmt(stylesheets[idx]);
+      }
     }
 
     this._writeDocument(headers);
@@ -293,6 +336,64 @@ RichText.EditorView = SC.FieldView.extend(
   iframeExecCommand: function() {
     var inputDocumentInstance = this.$inputDocument().get(0);
     return inputDocumentInstance.execCommand.apply(inputDocumentInstance, arguments);
+  }
+
+});
+
+RichText.EditorView.mixin({
+
+  loadedStylesheets: {},
+  pendingStylesheets: [],
+  stylesheetObservers: {},
+
+  stylesheetIsLoaded: function(url) {
+    return !!this.loadedStylesheets[url];
+  },
+
+  stylesheetIsLoading: function(url) {
+    return this.pendingStylesheets.indexOf(url) !== -1;
+  },
+
+  loadStylesheet: function(url, notify_target, notify_method){
+    if(notify_target && notify_method) this.addStylesheetObserver(url, notify_target, notify_method);
+
+    if (!this.stylesheetIsLoaded(url) && !this.stylesheetIsLoading(url)) {
+      this.pendingStylesheets.push(url);
+      return SC.Request.getUrl(url)
+                       .notify(this, this._stylesheetDidLoad, { url: url })
+                       .send();
+    }
+  },
+
+  addStylesheetObserver: function(url, target, method) {
+    var observers = this.stylesheetObservers;
+
+    if (!observers[url]) observers[url] = [];
+    observers[url].push({ target: target, method: method });
+
+    return YES;
+  },
+
+  _stylesheetDidLoad: function(request, params){
+    var response = request.get('response'),
+        url = params.url,
+        observers, observer, idx;
+
+    this.loadedStylesheets[url] = response;
+    this.pendingStylesheets.removeObject(url);
+    this._notifyLoad(url);
+  },
+
+  _notifyLoad: function(url){
+    var observers, observer;
+
+    observers = this.stylesheetObservers[url];
+    if (observers) {
+      for(idx=0; idx < observers.length; idx++) {
+        observer = observers[idx];
+        observer.target[observer.method](url);
+      }
+    }
   }
 
 });
