@@ -284,7 +284,7 @@ RichText.EditorView = SC.FieldView.extend(
 
     this.setFieldValue(this.get('fieldValue'));
 
-    SC.Event.add(this.$inputDocument(), 'keyup', this, this._field_fieldValueDidChange);
+    SC.Event.add(this.$inputDocument(), 'keyup', this, this._field_checkFieldValueDidChange);
     SC.Event.add(this.$inputDocument(), 'focus', this, this._field_fieldDidFocus);
     SC.Event.add(this.$inputDocument(), 'blur', this, this._field_fieldDidBlur);
   },
@@ -292,8 +292,14 @@ RichText.EditorView = SC.FieldView.extend(
   willDestroyLayer: function() {
     SC.Event.remove(this.$inputDocument(), 'blur', this, this._field_fieldDidBlur);
     SC.Event.remove(this.$inputDocument(), 'focus', this, this._field_fieldDidFocus);
-    SC.Event.remove(this.$inputDocument(), 'keyup', this, this._field_fieldValueDidChange);
+    SC.Event.remove(this.$inputDocument(), 'keyup', this, this._field_checkFieldValueDidChange);
     SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
+  },
+
+  _field_checkFieldValueDidChange: function(evt){
+    if(this.getFieldValue() !== this.get('value')) {
+      this._field_fieldValueDidChange(evt);
+    }
   },
 
   _loseBlur: function(){
