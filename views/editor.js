@@ -19,6 +19,9 @@ RichText.EditorView = SC.FieldView.extend(
 
   editorIsReady: NO,
 
+  selection: '',
+  cursorPos: null,
+
   toolbarView: RichText.ToolbarView,
 
   stylesheets: [],
@@ -284,22 +287,41 @@ RichText.EditorView = SC.FieldView.extend(
 
     this.setFieldValue(this.get('fieldValue'));
 
-    SC.Event.add(this.$inputDocument(), 'keyup', this, this._field_checkFieldValueDidChange);
-    SC.Event.add(this.$inputDocument(), 'focus', this, this._field_fieldDidFocus);
-    SC.Event.add(this.$inputDocument(), 'blur', this, this._field_fieldDidBlur);
+    SC.Event.add(inputDocument, 'keyup', this, this._field_keyupCaught);
+    SC.Event.add(inputDocument, 'mouseup', this, this._field_mouseupCaught);
+    SC.Event.add(inputDocument, 'paste', this, this._field_pasteCaught);
+    SC.Event.add(inputDocument, 'focus', this, this._field_fieldDidFocus);
+    SC.Event.add(inputDocument, 'blur', this, this._field_fieldDidBlur);
   },
 
   willDestroyLayer: function() {
-    SC.Event.remove(this.$inputDocument(), 'blur', this, this._field_fieldDidBlur);
-    SC.Event.remove(this.$inputDocument(), 'focus', this, this._field_fieldDidFocus);
-    SC.Event.remove(this.$inputDocument(), 'keyup', this, this._field_checkFieldValueDidChange);
+    var inputDocument = this.$inputDocument();
+
+    SC.Event.remove(inputDocument, 'blur', this, this._field_fieldDidBlur);
+    SC.Event.remove(inputDocument, 'focus', this, this._field_fieldDidFocus);
+    SC.Event.remove(inputDocument, 'paste', this, this._field_pasteCaught);
+    SC.Event.remove(inputDocument, 'mouseup', this, this._field_mouseupCaught);
+    SC.Event.remove(inputDocument, 'keyup', this, this._field_keyupCaught);
     SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
   },
 
-  _field_checkFieldValueDidChange: function(evt){
+  _field_keyupCaught: function(evt){
+    this.querySelection();
+    this.queryCursorPos();
+
     if(this.getFieldValue() !== this.get('value')) {
       this._field_fieldValueDidChange(evt);
     }
+  },
+
+  _field_mouseupCaught: function(evt){
+    this.querySelection();
+    this.queryCursorPos();
+  },
+
+  _field_pasteCaught: function(evt){
+    this.querySelection();
+    this.queryCursorPos();
   },
 
   _loseBlur: function(){
@@ -331,6 +353,101 @@ RichText.EditorView = SC.FieldView.extend(
 
   willLoseKeyResponderTo: function(responder) {
     this._loseBlur();
+  },
+
+// Utility methods
+
+  // Borrowed from github.com/etgryphon/sproutcore-ui
+  querySelection: function() {
+    var selection = '';
+
+    if (SC.browser.msie) {
+      selection = this._iframe.document.selection.createRange().text;
+      if (SC.none(selection)) selection = '';
+
+    } else {
+      var inputWindow = this.$inputWindow().get(0);
+      selection = inputWindow.getSelection();
+    }
+
+    // TODO: Are these notifiers necessary?
+    this.propertyWillChange('selection');
+    this.set('selection', selection.toString());
+    this.propertyDidChange('selection');
+  },
+
+  // Based on http://niichavo.wordpress.com/2009/01/06/contentEditable-div-cursor-position/
+  queryCursorPos: function() {
+    var inputWindow = this.$inputWindow().get(0),
+        inputDocument = this.$inputDocument().get(0),
+        cursorPos;
+
+    if (inputWindow.getSelection) {
+      var selObj = inputWindow.getSelection(),
+          anchor = selObj.anchorNode,
+          offset = selObj.anchorOffset;
+
+      if (anchor.nodeType === 1) { // elementNode
+        anchor = anchor.childNodes[offset];
+        offset = 0;
+      }
+
+      cursorPos =  this._anchorNodeOffset(anchor) + offset;
+
+    // TODO: The following has not been tested!
+    /* FIXME the following works wrong in Opera when the document is longer than 32767 chars */
+    } else if (inputDocument.selection) {
+      var range = inputDocument.selection.createRange();
+      var bookmark = range.getBookmark();
+      /* FIXME the following works wrong when the document is longer than 65535 chars */
+      cursorPos = bookmark.charCodeAt(2) - 11; /* Undocumented function */
+    }
+
+    // TODO: Are these notifiers necessary?
+    this.propertyWillChange('cursorPos');
+    this.set('cursorPos', cursorPos);
+    this.propertyDidChange('cursorPos');
+  },
+
+  _anchorNodeOffset: function(node) {
+    if (node === this.$inputBody().get(0)) return 0;
+
+    var offset = this._anchorNodeOffset(node.parentNode),
+        siblings = node.parentNode.childNodes,
+        child;
+
+    for (var i = 0; i < siblings.length; i++) {
+      child = siblings[i];
+
+      if (child === node) {
+        return offset;
+      } else {
+        offset += this._nodeLength(child);
+      }
+    }
+
+    throw "couldn't find node";
+  },
+
+  _nodeLength: function(node){
+    if (node.nodeType === 1) { // ElementNode
+      var total = 0, child, idx;
+
+      if (node.childNodes.length === 0) {
+        return 1;
+      } else {
+        for(idx=0; idx < node.childNodes.length; idx++) {
+          child = node.childNodes[idx];
+          total += this._nodeLength(child);
+        }
+      }
+
+      return total;
+    } else if (node.nodeType === 3) { // TextNode
+      return node.length;
+    } else {
+      return 0;
+    }
   },
 
 // Editor actions
