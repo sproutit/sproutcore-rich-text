@@ -25,16 +25,13 @@ RichText.EditorView = SC.FieldView.extend(
   selectionElement: null,
   cursorPos: null,
 
-  toolbarView: RichText.ToolbarView,
-
   stylesheets: [],
   loadStylesheetsInline: NO,
   
   // TODO: Should stylesheets be a display property?
-  displayProperties: 'fieldValue isEditing toolbarView'.w(),
+  displayProperties: 'fieldValue isEditing'.w(),
 
   // TODO: Add support for disabling
-  // TODO: Setup toolbar in a similar fashion to accessories
   // TODO: Can hints be made to work?
 
 // CoreQuery Accessors
@@ -91,69 +88,6 @@ RichText.EditorView = SC.FieldView.extend(
     if(this.getFieldValue() != this.get('fieldValue')) this.setFieldValue(this.get('fieldValue'));
   }.observes('value'),
 
-
-// SETUP
-
-  createChildViews: function() {
-    this.toolbarViewObserver() ;
-  },
-
-  toolbarViewObserver: function() {
-    var classNames, createdView = false;
-
-    var viewProperty = 'toolbarView';
-
-    // Is there an accessory view specified?
-    var previousView = this['_'+viewProperty] ;
-    var toolbarView = this.get(viewProperty) ;
-
-    // If the view is the same, there's nothing to do.  Otherwise, remove
-    // the old one (if any) and add the new one.
-    if (! (previousView
-           &&  toolbarView
-           &&  (previousView === toolbarView) ) ) {
-
-      // If there was a previous previous accessory view, remove it now.
-      if (previousView) {
-        // Remove the "sc-rich-text-editor-toolbar-view" class name that we had
-        // added earlier.
-        classNames = previousView.get('classNames') ;
-        classNames = classNames.without('sc-rich-text-editor-toolbar-view') ;
-        previousView.set('classNames', classNames) ;
-        this.removeChild(previousView) ;
-        previousView = null ;
-        this['_'+viewProperty] = null ;
-      }
-
-      // If there's a new accessory view to add, do so now.
-      if (toolbarView) {
-        // If the user passed in a class rather than an instance, create an
-        // instance now.
-        if (toolbarView.isClass) {
-          createdView = true;
-          toolbarView = toolbarView.create({
-            layoutView: this
-          }) ;
-        }
-
-        // Add in the "sc-rich-text-editor-toolbar-view" class name so that the
-        // z-index gets set correctly.
-        classNames = toolbarView.get('classNames') ;
-        var className = 'sc-rich-text-editor-toolbar-view' ;
-        if (classNames.indexOf(className) < 0) {
-          classNames.push(className) ;
-        }
-
-        // Actually add the view to our hierarchy and cache a reference.
-        this.appendChild(toolbarView) ;
-        this['_'+viewProperty] = toolbarView ;
-
-        // This may trigger again, but the observer won't run fully since it's the same as the previous
-        if(createdView) this.set('toolbarView', toolbarView);
-      }
-    }
-  }.observes('toolbarView'),
-
   render: function(context, firstTime) {
     arguments.callee.base.apply(this,arguments) ;
 
@@ -166,35 +100,18 @@ RichText.EditorView = SC.FieldView.extend(
     // update layer classes always
     context.setClass('not-empty', v.length > 0);
 
-    var topAdjustment = this._getToolbarViewHeight();
-
-    if (topAdjustment)  topAdjustment  += 'px' ;
-
-    this._renderField(context, firstTime, v, topAdjustment) ;
+    this._renderField(context, firstTime, v) ;
   },
 
-  _renderField: function(context, firstTime, value, topAdjustment) {
+  _renderField: function(context, firstTime, value) {
     if (firstTime) {
-      var name = SC.guidFor(this), adjustmentStyle = '';
+      var name = SC.guidFor(this);
 
       context.push('<span class="border"></span>');
 
-      if (topAdjustment) {
-        adjustmentStyle = ' style="top: '+topAdjustment+'"';
-      }
-
       // Render the iframe itself, and close off the padding.
-      context.push('<iframe name="%@"%@></iframe></span>'.fmt(name, adjustmentStyle));
+      context.push('<iframe name="%@"></iframe></span>'.fmt(name));
     }
-  },
-
-  _getToolbarViewHeight: function() {
-    var toolbarView = this.get('toolbarView'), height = 0;
-    if (toolbarView  &&  toolbarView.get) {
-      var frame = toolbarView.get('frame');
-      if (frame) height = frame.height; 
-    }
-    return height;
   },
 
   didCreateLayer: function() {
