@@ -351,10 +351,7 @@ RichText.EditorView = SC.FieldView.extend(
       cursorPos = bookmark.charCodeAt(2) - 11; /* Undocumented function */
     }
 
-    // TODO: Are these notifiers necessary?
-    this.propertyWillChange('cursorPos');
-    this.set('cursorPos', cursorPos);
-    this.propertyDidChange('cursorPos');
+    this.setIfChanged('cursorPos', cursorPos);
   },
 
   _anchorNodeOffset: function(node) {
