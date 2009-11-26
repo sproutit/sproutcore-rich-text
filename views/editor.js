@@ -13,6 +13,8 @@
 RichText.EditorView = SC.FieldView.extend(
 /** @scope RichText.EditorView.prototype */ {
 
+  iframeRootResponder: null,
+
   value: null,
 
   classNames: ['rich-text-editor-view', 'sc-text-field-view', 'text-area'],
@@ -256,7 +258,7 @@ RichText.EditorView = SC.FieldView.extend(
     var inputDocument = this.$inputDocument(),
         inputDocumentInstance = inputDocument.get(0),
         stylesheets = this.get('stylesheets'),
-        stylesheet_url, headers = '', idx;
+        stylesheet_url, headers = '', responder, idx;
 
     try {
       inputDocumentInstance.designMode = 'on';
@@ -287,25 +289,33 @@ RichText.EditorView = SC.FieldView.extend(
 
     this.setFieldValue(this.get('fieldValue'));
 
-    SC.Event.add(inputDocument, 'keyup', this, this.keyupCaught);
-    SC.Event.add(inputDocument, 'mouseup', this, this.mouseupCaught);
+    responder = SC.IFrameRootResponder.create({ iframe: this.$input().get(0), target: this });
+    responder.setup();
+    this.set('iframeRootResponder', responder);
+
+    // SC.Event.add(inputDocument, 'keyup', this, this.keyupCaught);
+    // SC.Event.add(inputDocument, 'mouseup', this, this.mouseupCaught);
     SC.Event.add(inputDocument, 'paste', this, this.pasteCaught);
     SC.Event.add(inputDocument, 'focus', this, this._field_fieldDidFocus);
     SC.Event.add(inputDocument, 'blur', this, this._field_fieldDidBlur);
   },
 
   willDestroyLayer: function() {
-    var inputDocument = this.$inputDocument();
+    var inputDocument = this.$inputDocument(),
+        responder = this.get('iframeRootResponder');
+
+    responder.teardown();
+    this.set('iframeRootResponder', null);
 
     SC.Event.remove(inputDocument, 'blur', this, this._field_fieldDidBlur);
     SC.Event.remove(inputDocument, 'focus', this, this._field_fieldDidFocus);
     SC.Event.remove(inputDocument, 'paste', this, this.pasteCaught);
-    SC.Event.remove(inputDocument, 'mouseup', this, this.mouseupCaught);
-    SC.Event.remove(inputDocument, 'keyup', this, this.keyupCaught);
+    // SC.Event.remove(inputDocument, 'mouseup', this, this.mouseupCaught);
+    // SC.Event.remove(inputDocument, 'keyup', this, this.keyupCaught);
     SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
   },
 
-  keyupCaught: function(evt){
+  keyUp: function(evt){
     this.querySelection();
     this.queryCursorPos();
 
@@ -314,7 +324,7 @@ RichText.EditorView = SC.FieldView.extend(
     }
   },
 
-  mouseupCaught: function(evt){
+  mouseUp: function(evt){
     this.querySelection();
     this.queryCursorPos();
   },
