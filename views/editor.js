@@ -285,6 +285,11 @@ RichText.EditorView = SC.FieldView.extend(
 
 // Utility methods
 
+  changedSelection: function() {
+    this.querySelection();
+    this._field_fieldValueDidChange();
+  },
+
   // Based on github.com/etgryphon/sproutcore-ui
   querySelection: function() {
     if (SC.browser.msie) {
@@ -450,6 +455,48 @@ RichText.EditorView = SC.FieldView.extend(
     return m1;
   },
 
+  // From wysihat
+  fontSizeNames:  function() {
+    var fontSizeNames = 'xxx-small xx-small x-small small medium large x-large xx-large'.w();
+
+    if (SC.browser.safari) {
+      fontSizeNames.shift();
+      fontSizeNames.push('-webkit-xxx-large');
+    }
+
+    return fontSizeNames;
+  }.property().cacheable(),
+
+  fontSizePixels: '9 10 13 16 18 24 32 48'.w(),
+
+  // From wysihat
+  _standardizeFontSize: function(fontSize) {
+    var newSize, match;
+
+    if (match = fontSize.match(/^(\d+)px$/)) {
+      var fontSizePixels = this.get('fontSizePixels'),
+          tempSize = parseInt(match[1]),
+          idx;
+
+      newSize = 0;
+      for(idx=0; idx < fontSizePixels.length; idx++) {
+        if (tempSize > fontSizePixels[idx]) {
+          newSize = idx + 1;
+        } else {
+          break;
+        }
+      }
+
+      return newSize;
+    } else {
+      newSize = this.get('fontSizeNames').indexOf(fontSize);
+      if (newSize >= 0) return newSize;
+    }
+
+    // Fallback
+    return parseInt(fontSize, 10);
+  },
+
   // borrowed with slight changes from jQuery
   getStyle: function(elem, name, force) {
     var defaultView = this.$inputWindow().get(0),
@@ -576,7 +623,12 @@ RichText.EditorView = SC.FieldView.extend(
     return this._standardizeColor(this.getStyle(body, 'background-color'));
   }.property().cacheable(),
 
-  _basicSelectionModifier: function(property, type, val, related) {
+  defaultFontSize: function(){
+    var body = this.$inputBody().get(0);
+    return this._standardizeFontSize(this.getStyle(body, 'font-size'));
+  }.property().cacheable(),
+
+  _basicSelectionModifier: function(property, type, val) {
     if (!this.get('editorIsReady')) return false;
 
     if (val !== undefined) {
@@ -584,19 +636,13 @@ RichText.EditorView = SC.FieldView.extend(
       var x = this.iframeExecCommand(type, false, val);
       this.propertyDidChange(property);
 
-      if(x) {
-        this._field_fieldValueDidChange();
-
-        if (related) {
-          for (var idx=0; idx < related.length; idx++){
-            this.notifyPropertyChange(related[idx]);
-          }
-        }
-      }
+      if(x) this.changedSelection();
     }
 
     return this.iframeQueryState(type);
   },
+
+// Formatting properties
 
   selectionColor: function(key, val) {
     if (!this.get('editorIsReady')) return null;
@@ -606,7 +652,7 @@ RichText.EditorView = SC.FieldView.extend(
       var x = this.iframeExecCommand('forecolor', false, val);
       this.propertyDidChange('selectionColor');
 
-      if(x) this._field_fieldValueDidChange();
+      if(x) this.changedSelection();
     }
 
     return this._standardizeColor(this.getSelectionStyle('color'));
@@ -623,10 +669,25 @@ RichText.EditorView = SC.FieldView.extend(
       var x = this.iframeExecCommand(bgCommand, false, val);
       this.propertyDidChange('selectionBackgroundColor');
 
-      if(x) this._field_fieldValueDidChange();
+      if(x) this.changedSelection();
     }
 
     return this._standardizeColor(this.getSelectionStyle('background-color'));
+
+  }.property('selectionElement').cacheable(),
+
+  selectionFontSize: function(key, val) {
+    if (!this.get('editorIsReady')) return null;
+
+    if (val !== undefined) {
+      this.propertyWillChange('selectionFontSize');
+      var x = this.iframeExecCommand('fontsize', false, val);
+      this.propertyDidChange('selectionFontSize');
+
+      if(x) this.changedSelection();
+    }
+
+    return this._standardizeFontSize(this.getSelectionStyle('font-size'));
 
   }.property('selectionElement').cacheable(),
 
@@ -647,23 +708,19 @@ RichText.EditorView = SC.FieldView.extend(
   }.property('selection').cacheable(),
 
   selectionIsLeftAligned: function(key, val) {
-    return this._basicSelectionModifier('selectionIsLeftAligned', 'justifyleft', val,
-                                          'selectionIsJustified selectionIsCentered selectionIsRightAligned'.w());
+    return this._basicSelectionModifier('selectionIsLeftAligned', 'justifyleft', val);
   }.property('selection').cacheable(),
 
   selectionIsJustified: function(key, val) {
-    return this._basicSelectionModifier('selectionIsJustified', 'justifyfull', val,
-                                          'selectionIsLeftAligned selectionIsCentered selectionIsRightAligned'.w());
+    return this._basicSelectionModifier('selectionIsJustified', 'justifyfull', val);
   }.property('selection').cacheable(),
 
   selectionIsCentered: function(key, val) {
-    return this._basicSelectionModifier('selectionIsCentered', 'justifycenter', val,
-                                          'selectionIsLeftAligned selectionIsJustified selectionIsRightAligned'.w());
+    return this._basicSelectionModifier('selectionIsCentered', 'justifycenter', val);
   }.property('selection').cacheable(),
 
   selectionIsRightAligned: function(key, val) {
-    return this._basicSelectionModifier('selectionIsRightAligned', 'justifyright', val,
-                                        'selectionIsLeftAligned selectionIsJustified selectionIsCentered'.w());
+    return this._basicSelectionModifier('selectionIsRightAligned', 'justifyright', val);
   }.property('selection').cacheable(),
 
   selectionIsDefaultColor: function(key, val) {
@@ -711,6 +768,56 @@ RichText.EditorView = SC.FieldView.extend(
             && selectionBackgroundColor !== this.get('defaultBackgroundColor');
 
   }.property('selectionBackgroundColor').cacheable(),
+
+  selectionIsDefaultSize: function(key, val) {
+    var selectionFontSize, defaultFontSize = this.get('defaultFontSize');
+
+    if (val === YES) {
+      this.set('selectionFontSize', defaultFontSize);
+    }
+
+    selectionFontSize = this.get('selectionFontSize');
+
+    return CmndoSprout.blank(selectionFontSize) || selectionFontSize === defaultFontSize;
+
+  }.property('selectionFontSize').cacheable(),
+
+  selectionIsSizeIncreased: function() {
+    var selectionFontSize = this.get('selectionFontSize');
+    return !CmndoSprout.blank(selectionFontSize) && selectionFontSize > this.get('defaultFontSize');
+  }.property('selectionFontSize').cacheable(),
+
+  selectionIsSizeDecreased: function() {
+    var selectionFontSize = this.get('selectionFontSize');
+    return !CmndoSprout.blank(selectionFontSize) && selectionFontSize < this.get('defaultFontSize');
+  }.property('selectionFontSize').cacheable(),
+
+  selectionIsSuperscript: function(key, val) {
+    return this._basicSelectionModifier('selectionIsSuperscript', 'superscript', val);
+  }.property('selection').cacheable(),
+
+  selectionIsSubscript: function(key, val) {
+    return this._basicSelectionModifier('selectionIsSubscript', 'subscript', val);
+  }.property('selection').cacheable(),
+
+// Formatting commands
+
+  selectionIncreaseSize: function() {
+    var selectionFontSize = this.get('selectionFontSize');
+    console.log('selectionIncreaseSize', selectionFontSize + 1);
+    this.set('selectionFontSize', selectionFontSize + 1);
+  },
+
+  selectionDecreaseSize: function() {
+    var selectionFontSize = this.get('selectionFontSize');
+    console.log('selectionDecreaseSize', selectionFontSize - 1);
+    this.set('selectionFontSize', selectionFontSize - 1);
+  },
+
+  selectionRemoveFormatting: function() {
+    this.iframeExecCommand('removeformat', false, YES);
+    this.changedSelection();
+  },
 
   iframeExecCommand: function() {
     var inputDocumentInstance = this.$inputDocument().get(0);

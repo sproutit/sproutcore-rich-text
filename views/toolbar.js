@@ -7,7 +7,9 @@ RichText.ToolbarView = SC.View.extend(
 
   childViews: ('strikethroughButton boldButton underlineButton italicsButton ' + 
                'leftAlignButton justifyButton centerButton rightAlignButton ' +
-               'defaultColorButton hightlightButton highlightBackgroundButton').w(),
+               'defaultColorButton hightlightButton highlightBackgroundButton ' +
+               'increaseSizeButton decreaseSizeButton resetSizeButton ' +
+               'superscriptButton subscriptButton removeFormattingButton').w(),
 
   editor: null,
 
@@ -71,6 +73,50 @@ RichText.ToolbarView = SC.View.extend(
   highlightBackgroundButton: RichText.ToolbarButtonView.extend({
     title: 'Highlight BG',
     valueBinding: '.parentView.editor.selectionIsBackgroundHighlighted'
+  }),
+
+  highlightBackgroundButton: RichText.ToolbarButtonView.extend({
+    title: 'Highlight BG',
+    valueBinding: '.parentView.editor.selectionIsBackgroundHighlighted'
+  }),
+
+  increaseSizeButton: RichText.ToolbarButtonView.extend({
+    title: '+',
+    buttonBehavior: SC.PUSH_BEHAVIOR,
+    targetBinding: '.parentView.editor',
+    action: 'selectionIncreaseSize',
+    valueBinding: '.parentView.editor.selectionIsSizeIncreased'
+  }),
+
+  decreaseSizeButton: RichText.ToolbarButtonView.extend({
+    title: '-',
+    buttonBehavior: SC.PUSH_BEHAVIOR,
+    targetBinding: '.parentView.editor',
+    action: 'selectionDecreaseSize',
+    valueBinding: '.parentView.editor.selectionIsSizeDecreased'
+  }),
+
+  resetSizeButton: RichText.ToolbarButtonView.extend({
+    title: '+-',
+    buttonBehavior: SC.TOGGLE_ON_BEHAVIOR,
+    valueBinding: '.parentView.editor.selectionIsDefaultSize'
+  }),
+
+  superscriptButton: RichText.ToolbarButtonView.extend({
+    title: 'Super',
+    valueBinding: '.parentView.editor.selectionIsSuperscript'
+  }),
+
+  subscriptButton: RichText.ToolbarButtonView.extend({
+    title: 'Sub',
+    valueBinding: '.parentView.editor.selectionIsSubscript'
+  }),
+
+  removeFormattingButton: RichText.ToolbarButtonView.extend({
+    title: 'Remove',
+    buttonBehavior: SC.PUSH_BEHAVIOR,
+    targetBinding: '.parentView.editor',
+    action: 'selectionRemoveFormatting'
   })
 
 });
