@@ -18,4 +18,8 @@ RichText = SC.Object.create(
 
   // TODO: Add global constants or singleton objects needed by your app here.
 
+  blank: function(val) {
+    return SC.none(val) || val === '';
+  }
+
 }) ;

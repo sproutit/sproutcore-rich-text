@@ -737,8 +737,8 @@ RichText.EditorView = SC.FieldView.extend(
     selectionColor = this.get('selectionColor');
     selectionBackgroundColor = this.get('selectionBackgroundColor');
 
-    return (CmndoSprout.blank(selectionColor) || selectionColor === this.get('defaultColor'))
-            && (CmndoSprout.blank(selectionBackgroundColor) || selectionBackgroundColor === this.get('defaultBackgroundColor'));
+    return (RichText.blank(selectionColor) || selectionColor === this.get('defaultColor'))
+            && (RichText.blank(selectionBackgroundColor) || selectionBackgroundColor === this.get('defaultBackgroundColor'));
 
   }.property('selectionColor', 'selectionBackgroundColor').cacheable(),
 
@@ -752,7 +752,7 @@ RichText.EditorView = SC.FieldView.extend(
 
     selectionColor = this.get('selectionColor');
 
-    return !CmndoSprout.blank(selectionColor)
+    return !RichText.blank(selectionColor)
             && selectionColor !== this.get('defaultColor');
 
   }.property('selectionColor').cacheable(),
@@ -767,7 +767,7 @@ RichText.EditorView = SC.FieldView.extend(
 
     selectionBackgroundColor = this.get('selectionBackgroundColor');
 
-    return !CmndoSprout.blank(selectionBackgroundColor)
+    return !RichText.blank(selectionBackgroundColor)
             && selectionBackgroundColor !== this.get('defaultBackgroundColor');
 
   }.property('selectionBackgroundColor').cacheable(),
@@ -781,18 +781,18 @@ RichText.EditorView = SC.FieldView.extend(
 
     selectionFontSize = this.get('selectionFontSize');
 
-    return CmndoSprout.blank(selectionFontSize) || selectionFontSize === defaultFontSize;
+    return RichText.blank(selectionFontSize) || selectionFontSize === defaultFontSize;
 
   }.property('selectionFontSize').cacheable(),
 
   selectionIsSizeIncreased: function() {
     var selectionFontSize = this.get('selectionFontSize');
-    return !CmndoSprout.blank(selectionFontSize) && selectionFontSize > this.get('defaultFontSize');
+    return !RichText.blank(selectionFontSize) && selectionFontSize > this.get('defaultFontSize');
   }.property('selectionFontSize').cacheable(),
 
   selectionIsSizeDecreased: function() {
     var selectionFontSize = this.get('selectionFontSize');
-    return !CmndoSprout.blank(selectionFontSize) && selectionFontSize < this.get('defaultFontSize');
+    return !RichText.blank(selectionFontSize) && selectionFontSize < this.get('defaultFontSize');
   }.property('selectionFontSize').cacheable(),
 
   selectionIsSuperscript: function(key, val) {
