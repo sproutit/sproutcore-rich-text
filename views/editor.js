@@ -475,7 +475,7 @@ RichText.EditorView = SC.FieldView.extend(
 
     if (match = fontSize.match(/^(\d+)px$/)) {
       var fontSizePixels = this.get('fontSizePixels'),
-          tempSize = parseInt(match[1]),
+          tempSize = parseInt(match[1], 10),
           idx;
 
       newSize = 0;
@@ -557,11 +557,12 @@ RichText.EditorView = SC.FieldView.extend(
 
         // Go through and make them visible, but in reverse
         // (It would be better if we knew the exact display type that they had)
-        for ( ; i < stack.length; i++ )
+        for ( ; i < stack.length; i++ ) {
           if ( color( stack[ i ] ) ) {
             swap[ i ] = stack[ i ].style.display;
             stack[ i ].style.display = "block";
           }
+        }
 
         // Since we flip the display style, we have to handle that
         // one special, otherwise get the value
@@ -570,9 +571,11 @@ RichText.EditorView = SC.FieldView.extend(
           ( computedStyle && computedStyle.getPropertyValue( name ) ) || "";
 
         // Finally, revert the display styles back
-        for ( i = 0; i < swap.length; i++ )
-          if ( swap[ i ] != null )
+        for ( i = 0; i < swap.length; i++ ) {
+          if ( swap[ i ] != null ) {
             stack[ i ].style.display = swap[ i ];
+          }
+        }
       }
 
       // We should always get a number back from opacity
@@ -591,7 +594,7 @@ RichText.EditorView = SC.FieldView.extend(
 
       // If we're not dealing with a regular pixel number
       // but a number that has a weird ending, we need to convert it to pixels
-      if ( !/^\d+(px)?$/i.test( ret ) && /^\d/.test( ret ) ) {
+      if (!(/^\d+(px)?$/i).test( ret ) && (/^\d/).test( ret ) ) {
         // Remember the original values
         var left = style.left, rsLeft = elem.runtimeStyle.left;
 
