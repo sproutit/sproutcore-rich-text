@@ -5,11 +5,13 @@ RichText.ToolbarView = SC.View.extend(
 
   classNames: 'rich-text-toolbar-view',
 
-  childViews: ('strikethroughButton boldButton underlineButton italicsButton ' + 
+  childViews: ('strikethroughButton boldButton underlineButton italicsButton ' +
                'leftAlignButton justifyButton centerButton rightAlignButton ' +
                'defaultColorButton hightlightButton highlightBackgroundButton ' +
                'increaseSizeButton decreaseSizeButton resetSizeButton ' +
-               'superscriptButton subscriptButton removeFormattingButton').w(),
+               'superscriptButton subscriptButton ' +
+               'indentButton outdentButton orderedListButton unorderedListButton ' +
+               'removeFormattingButton').w(),
 
   editor: null,
 
@@ -110,6 +112,30 @@ RichText.ToolbarView = SC.View.extend(
   subscriptButton: RichText.ToolbarButtonView.extend({
     title: 'Sub',
     valueBinding: '.parentView.editor.selectionIsSubscript'
+  }),
+
+  indentButton: RichText.ToolbarButtonView.extend({
+    title: 'Indent',
+    buttonBehavior: SC.PUSH_BEHAVIOR,
+    targetBinding: '.parentView.editor',
+    action: 'selectionIndent'
+  }),
+
+  outdentButton: RichText.ToolbarButtonView.extend({
+    title: 'Outdent',
+    buttonBehavior: SC.PUSH_BEHAVIOR,
+    targetBinding: '.parentView.editor',
+    action: 'selectionOutdent'
+  }),
+
+  orderedListButton: RichText.ToolbarButtonView.extend({
+    title: 'OL',
+    valueBinding: '.parentView.editor.selectionIsOrderedList'
+  }),
+
+  unorderedListButton: RichText.ToolbarButtonView.extend({
+    title: 'UL',
+    valueBinding: '.parentView.editor.selectionIsUnorderedList'
   }),
 
   removeFormattingButton: RichText.ToolbarButtonView.extend({

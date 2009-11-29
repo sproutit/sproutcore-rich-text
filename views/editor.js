@@ -803,6 +803,14 @@ RichText.EditorView = SC.FieldView.extend(
     return this._basicSelectionModifier('selectionIsSubscript', 'subscript', val);
   }.property('selection').cacheable(),
 
+  selectionIsOrderedList: function(key, val) {
+    return this._basicSelectionModifier('selectionIsOrderedList', 'insertorderedlist', val);
+  }.property('selection').cacheable(),
+
+  selectionIsUnorderedList: function(key, val) {
+    return this._basicSelectionModifier('selectionIsUnorderedList', 'insertunorderedlist', val);
+  }.property('selection').cacheable(),
+
 // Formatting commands
 
   selectionIncreaseSize: function() {
@@ -813,6 +821,16 @@ RichText.EditorView = SC.FieldView.extend(
   selectionDecreaseSize: function() {
     var selectionFontSize = this.get('selectionFontSize');
     this.set('selectionFontSize', selectionFontSize - 1);
+  },
+
+  selectionIndent: function() {
+    this.iframeExecCommand('indent', false, YES);
+    this.changedSelection();
+  },
+
+  selectionOutdent: function() {
+    this.iframeExecCommand('outdent', false, YES);
+    this.changedSelection();
   },
 
   selectionRemoveFormatting: function() {
