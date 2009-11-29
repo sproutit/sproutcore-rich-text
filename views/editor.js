@@ -807,13 +807,11 @@ RichText.EditorView = SC.FieldView.extend(
 
   selectionIncreaseSize: function() {
     var selectionFontSize = this.get('selectionFontSize');
-    console.log('selectionIncreaseSize', selectionFontSize + 1);
     this.set('selectionFontSize', selectionFontSize + 1);
   },
 
   selectionDecreaseSize: function() {
     var selectionFontSize = this.get('selectionFontSize');
-    console.log('selectionDecreaseSize', selectionFontSize - 1);
     this.set('selectionFontSize', selectionFontSize - 1);
   },
 
