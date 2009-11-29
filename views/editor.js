@@ -731,7 +731,7 @@ RichText.EditorView = SC.FieldView.extend(
 
     if (val === YES) {
       this.set('selectionColor', 'inherit');
-      this.set('selectionBackgroundColor', 'inherit');
+      this.set('selectionBackgroundColor', 'transparent');
     }
 
     selectionColor = this.get('selectionColor');
