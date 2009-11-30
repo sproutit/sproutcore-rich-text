@@ -11,7 +11,7 @@ RichText.ToolbarView = SC.View.extend(
                'increaseSizeButton decreaseSizeButton resetSizeButton ' +
                'superscriptButton subscriptButton ' +
                'indentButton outdentButton orderedListButton unorderedListButton ' +
-               'removeFormattingButton').w(),
+               'removeFormattingButton undoButton redoButton').w(),
 
   editor: null,
 
@@ -143,6 +143,22 @@ RichText.ToolbarView = SC.View.extend(
     buttonBehavior: SC.PUSH_BEHAVIOR,
     targetBinding: '.parentView.editor',
     action: 'selectionRemoveFormatting'
+  }),
+
+  undoButton: RichText.ToolbarButtonView.extend({
+    title: 'Undo',
+    isEnabledBinding: '.parentView.editor.undoAllowed',
+    buttonBehavior: SC.PUSH_BEHAVIOR,
+    targetBinding: '.parentView.editor',
+    action: 'undoChange'
+  }),
+
+  redoButton: RichText.ToolbarButtonView.extend({
+    title: 'Redo',
+    isEnabledBinding: '.parentView.editor.redoAllowed',
+    buttonBehavior: SC.PUSH_BEHAVIOR,
+    targetBinding: '.parentView.editor',
+    action: 'redoChange'
   })
 
 });

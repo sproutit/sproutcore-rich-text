@@ -816,6 +816,14 @@ RichText.EditorView = SC.FieldView.extend(
     return this._basicSelectionModifier('selectionIsUnorderedList', 'insertunorderedlist', val);
   }.property('selection').cacheable(),
 
+  undoAllowed: function() {
+    return this.iframeQueryEnabled('undo');
+  }.property('selection').cacheable(),
+
+  redoAllowed: function() {
+    return this.iframeQueryEnabled('redo');
+  }.property('selection').cacheable(),
+
 // Formatting commands
 
   selectionIncreaseSize: function() {
@@ -843,6 +851,16 @@ RichText.EditorView = SC.FieldView.extend(
     this.changedSelection();
   },
 
+  undoChange: function() {
+    this.iframeExecCommand('undo', false, YES);
+    this.changedSelection();
+  },
+
+  redoChange: function() {
+    this.iframeExecCommand('redo', false, YES);
+    this.changedSelection();
+  },
+
   iframeExecCommand: function() {
     var inputDocumentInstance = this.$inputDocument().get(0);
     return inputDocumentInstance.execCommand.apply(inputDocumentInstance, arguments);
@@ -851,6 +869,11 @@ RichText.EditorView = SC.FieldView.extend(
   iframeQueryState: function() {
     var inputDocumentInstance = this.$inputDocument().get(0);
     return inputDocumentInstance.queryCommandState.apply(inputDocumentInstance, arguments);
+  },
+
+  iframeQueryEnabled: function() {
+    var inputDocumentInstance = this.$inputDocument().get(0);
+    return inputDocumentInstance.queryCommandEnabled.apply(inputDocumentInstance, arguments);
   }
 
 });
