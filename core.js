@@ -14,7 +14,7 @@ RichText = SC.Object.create(
   /** @scope RichText.prototype */ {
 
   NAMESPACE: 'RichText',
-  VERSION: '0.2.0',
+  VERSION: '0.3.0',
 
   // TODO: Add global constants or singleton objects needed by your app here.
 
