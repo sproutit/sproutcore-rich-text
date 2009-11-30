@@ -325,8 +325,13 @@ RichText.EditorView = SC.FieldView.extend(
       while(selectionElement && selectionElement.nodeType !== 1) selectionElement = selectionElement.parentNode;
     }
 
-    this.setIfChanged('selection', selection.toString());
-    this.setIfChanged('selectionElement', selectionElement);
+    // NOTE: Before changing this, make sure it works property with the text align button states
+    this.propertyWillChange('selection');
+    this.propertyWillChange('selectionElement');
+    this.set('selection', selection.toString());
+    this.set('selectionElement', selectionElement);
+    this.propertyDidChange('selection');
+    this.propertyDidChange('selectionElement');
   },
 
   // Based on http://niichavo.wordpress.com/2009/01/06/contentEditable-div-cursor-position/
