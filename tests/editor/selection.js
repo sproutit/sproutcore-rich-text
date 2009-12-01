@@ -8,7 +8,7 @@ module("RichText.EditorView",{
       pane = SC.MainPane.create({
         childViews: [
           RichText.EditorView.extend({
-            value: ''
+            value: 'testing'
           }),
           RichText.EditorView.extend({
             stylesheets: [sc_static('test')],
@@ -30,7 +30,14 @@ module("RichText.EditorView",{
   }
 });
 
-test('selection');
+test('selection', function(){
+  ReadyCallback.run(view, function(){
+    createSelection(view);
+    console.log('selection', view.get('selection'));
+    equals(view.get('selection'), 'testing', 'selection should be "testing"');
+  });
+});
+
 test('selectionElement');
 
 test('cursorPos');
