@@ -1,0 +1,1 @@
+test('text field should play nice with RootResponder');
