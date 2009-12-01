@@ -211,8 +211,6 @@ RichText.EditorView = SC.FieldView.extend(
     responder.setup();
     this.set('iframeRootResponder', responder);
 
-    // SC.Event.add(inputDocument, 'keyup', this, this.keyupCaught);
-    // SC.Event.add(inputDocument, 'mouseup', this, this.mouseupCaught);
     SC.Event.add(inputDocument, 'paste', this, this.pasteCaught);
     SC.Event.add(inputDocument, 'focus', this, this._field_fieldDidFocus);
     SC.Event.add(inputDocument, 'blur', this, this._field_fieldDidBlur);
@@ -228,8 +226,6 @@ RichText.EditorView = SC.FieldView.extend(
     SC.Event.remove(inputDocument, 'blur', this, this._field_fieldDidBlur);
     SC.Event.remove(inputDocument, 'focus', this, this._field_fieldDidFocus);
     SC.Event.remove(inputDocument, 'paste', this, this.pasteCaught);
-    // SC.Event.remove(inputDocument, 'mouseup', this, this.mouseupCaught);
-    // SC.Event.remove(inputDocument, 'keyup', this, this.keyupCaught);
     SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
   },
 
