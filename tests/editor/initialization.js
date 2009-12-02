@@ -46,7 +46,6 @@ test("renders an iframe input tag with appropriate attributes", function() {
 
 test('should add stylesheet link tags', function(){
   ReadyCallback.run(view2, function(){
-    console.log('test', sc_static('test'));
     equals(view2.$inputDocument().find('head').html().trim(),
             '<link rel="stylesheet" href="'+sc_static('test')+'" type="text/css" charset="utf-8">',
             'should have link tag');
@@ -86,7 +85,9 @@ test('iframe should have basic html', function(){
 });
 
 test('editorIsReady', function(){
-  ok(!view.get('editorIsReady'), 'editor should not be ready at start');
+  if (!SC.browser.safari) {
+    ok(!view.get('editorIsReady'), 'editor should not be ready at start');
+  }
   ReadyCallback.run(view, function(){
     ok(view.get('editorIsReady'), 'editor should become ready');
   });

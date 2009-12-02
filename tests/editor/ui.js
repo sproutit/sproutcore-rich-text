@@ -29,7 +29,7 @@ module("RichText.EditorView",{
 test('setting value updates iframe body', function(){
   ReadyCallback.run(view, function(){
     view.set('value', 'this is a test');
-    equals(view.$inputBody().html(), 'this is a test<br>', 'value should be "this is a test<br>"');
+    ok(view.$inputBody().html().match('this is a test'), 'html should include "this is a test"');
   });
 });
 

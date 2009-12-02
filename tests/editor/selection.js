@@ -81,8 +81,9 @@ test('gets default color', function(){
 
 test('gets default background color', function(){
   ReadyCallback.run(view, function(){
-    // Won't be set
-    equals(view.get('defaultBackgroundColor'), null, 'defaultBackgroundColor should be null');
+    var result = (SC.browser.mozilla) ? null : '#000000'; // Won't be set in FF
+    equals(view.get('defaultBackgroundColor'), result,
+            'defaultBackgroundColor should be ' + (result === null ? 'null' : result));
   });
 
   // NOTE: This only works with inline stylesheets
