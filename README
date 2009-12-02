@@ -6,3 +6,12 @@ Copyright: ©2009 Peter Wagenet
 RichText Editor for Sproutcore.
 
 Demo at: http://rxcfc.github.com/rich_text_demo
+
+
+CREDITS:
+
+Wysihat: http://github.com/josh/wysihat
+  Much of my inspiration comes from this project. I've also borrowed extensively from their sanitization/normalization code.
+
+SCUI: http://github.com/etgryphon/sproutcore-ui
+  I've looked to the SCUI.ContentEditableView for ideas on how best to implement this in SproutCore.
