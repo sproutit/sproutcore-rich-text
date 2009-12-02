@@ -1,0 +1,1 @@
+test('sanitizer works properly');
