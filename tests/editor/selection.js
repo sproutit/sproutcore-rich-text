@@ -13,6 +13,9 @@ module("RichText.EditorView",{
           RichText.EditorView.extend({
             stylesheets: [sc_static('test')],
             loadStylesheetsInline: YES
+          }),
+          RichText.EditorView.extend({
+            value: '<span style="font-weight: bold">Test</span>'
           })
         ]
     });
@@ -21,7 +24,7 @@ module("RichText.EditorView",{
 
     view  = pane.childViews[0];
     view1 = pane.childViews[1];
-    // view2 = pane.childViews[2];
+    view2 = pane.childViews[2];
   },
 
   teardown: function() {
@@ -33,16 +36,37 @@ module("RichText.EditorView",{
 test('selection', function(){
   ReadyCallback.run(view, function(){
     createSelection(view);
-    console.log('selection', view.get('selection'));
     equals(view.get('selection'), 'testing', 'selection should be "testing"');
   });
 });
 
-test('selectionElement');
+test('selectionElement', function(){
+  ReadyCallback.run(view2, function(){
+    var node = view2.$inputBody().find('span').get(0);
+    createSelection(view2);
+    equals(view2.get('selectionElement'), node, 'selectionElement should be &lt;span&gt;');
+  });
+});
 
-test('cursorPos');
+test('cursorPos', function(){
+  ReadyCallback.run(view2, function(){
+    // TextNode in <span>
+    var node = view2.$inputBody().find('span').contents()[0];
+    createSelection(view2, { startNode: node, startOffset: 2 });
 
-test('gets selection style');
+    equals(view2.get('cursorPos'), 2, 'cursorPos should be 2');
+  });
+});
+
+test('gets selection style', function(){
+  ReadyCallback.run(view2, function(){
+    // TextNode in <span>
+    var node = view2.$inputBody().find('span').contents()[0];
+    createSelection(view2, { startNode: node, startOffset: 2 });
+
+    equals(view2.getSelectionStyle('font-weight'), 'bold', 'font-weight should be bold');
+  });
+});
 
 test('gets default color', function(){
   ReadyCallback.run(view, function(){
