@@ -164,9 +164,14 @@ RichText.EditorView = SC.FieldView.extend(
     if (!headers) headers = '';
     var inputDocumentInstance = this.$inputDocument().get(0);
 
-    inputDocumentInstance.open();
+    inputDocumentInstance.open("text/html","replace");
+
     inputDocumentInstance.write("<html><head>%@</head><body></body></html>".fmt(headers));
-    inputDocumentInstance.close();
+
+    if(!SC.browser.msie) {
+      // This fails in IE for unknown reasons
+      inputDocumentInstance.close();
+    }
   },
 
   _setupEditor: function(){
