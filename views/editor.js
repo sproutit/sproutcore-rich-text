@@ -184,13 +184,13 @@ RichText.EditorView = SC.FieldView.extend(
         stylesheets = this.get('stylesheets'),
         stylesheet_url, headers = '', responder, idx;
 
-    try {
-      inputDocumentInstance.designMode = 'on';
-    } catch ( e ) {
-      // Will fail on Gecko if the editor is placed in an hidden container element
-      // The design mode will be set ones the editor is focused
-      inputDocument.focus(function() { inputDocumentInstance.designMode(); } );
-    }
+    // try {
+    //   inputDocumentInstance.designMode = 'on';
+    // } catch ( e ) {
+    //   // Will fail on Gecko if the editor is placed in an hidden container element
+    //   // The design mode will be set ones the editor is focused
+    //   inputDocument.focus(function() { inputDocumentInstance.designMode(); } );
+    // }
 
     if (this.get('loadStylesheetsInline')) {
       headers += "<style type='text/css'>\n";
@@ -208,6 +208,12 @@ RichText.EditorView = SC.FieldView.extend(
     }
 
     this._writeDocument(headers);
+
+    if (inputDocumentInstance.body.contentEditable) {
+      inputDocumentInstance.body.contentEditable = true;
+    } else {
+      inputDocumentInstance.designMode = 'On';
+    }
 
     this.set('editorIsReady', YES);
 
