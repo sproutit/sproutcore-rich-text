@@ -630,7 +630,8 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   getSelectionStyle: function(name, force) {
-    return this.getStyle(this.get('selectionElement'), name, force);
+    var elem = this.get('selectionElement');
+    return elem ? this.getStyle(elem, name, force) : null;
   },
 
   defaultColor: function() {
