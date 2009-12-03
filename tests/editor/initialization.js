@@ -1,4 +1,4 @@
-sc_require('lib/test_helper');
+sc_require('tests/test_helper');
 
 var pane, view, view1, view2;
 
