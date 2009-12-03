@@ -180,6 +180,7 @@ RichText.EditorView = SC.FieldView.extend(
 
     var inputDocument = this.$inputDocument(),
         inputDocumentInstance = inputDocument.get(0),
+        focusTarget = (SC.browser.msie) ? this.$input() : inputDocument,
         stylesheets = this.get('stylesheets'),
         stylesheet_url, headers = '', responder, idx;
 
@@ -217,19 +218,20 @@ RichText.EditorView = SC.FieldView.extend(
     this.set('iframeRootResponder', responder);
 
     SC.Event.add(inputDocument, 'paste', this, this.pasteCaught);
-    SC.Event.add(inputDocument, 'focus', this, this._field_fieldDidFocus);
+    SC.Event.add(focusTarget, 'focus', this, this._field_fieldDidFocus);
     SC.Event.add(inputDocument, 'blur', this, this._field_fieldDidBlur);
   },
 
   willDestroyLayer: function() {
     var inputDocument = this.$inputDocument(),
+        focusTarget = (SC.browser.msie) ? this.$input() : inputDocument,
         responder = this.get('iframeRootResponder');
 
     responder.teardown();
     this.set('iframeRootResponder', null);
 
     SC.Event.remove(inputDocument, 'blur', this, this._field_fieldDidBlur);
-    SC.Event.remove(inputDocument, 'focus', this, this._field_fieldDidFocus);
+    SC.Event.remove(focusTarget, 'focus', this, this._field_fieldDidFocus);
     SC.Event.remove(inputDocument, 'paste', this, this.pasteCaught);
     SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
   },
