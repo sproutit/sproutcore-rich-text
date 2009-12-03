@@ -8,13 +8,16 @@ module("RichText.EditorView",{
       pane = SC.MainPane.create({
         childViews: [
           RichText.EditorView.extend({
+            layout: { top: 10, right: 10, width: 300, height: 400 },
             value: 'testing'
           }),
           RichText.EditorView.extend({
+            layout: { top: 10, right: 10, width: 300, height: 400 },
             stylesheets: [sc_static('test')],
             loadStylesheetsInline: YES
           }),
           RichText.EditorView.extend({
+            layout: { top: 10, right: 10, width: 300, height: 400 },
             value: '<span style="font-weight: bold">Test</span>'
           })
         ]

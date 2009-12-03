@@ -8,6 +8,7 @@ module("RichText.EditorView",{
       pane = SC.MainPane.create({
         childViews: [
           RichText.EditorView.extend({
+            layout: { top: 10, right: 10, width: 300, height: 400 },
             value: ''
           })
         ]

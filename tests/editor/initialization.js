@@ -8,13 +8,16 @@ module("RichText.EditorView",{
       pane = SC.MainPane.create({
         childViews: [
           RichText.EditorView.extend({
+            layout: { top: 10, right: 10, width: 300, height: 400 },
             value: ''
           }),
           RichText.EditorView.extend({
+            layout: { top: 10, right: 10, width: 300, height: 400 },
             value: 'SproutCore',
             isEnabled: NO
           }),
           RichText.EditorView.extend({
+            layout: { top: 10, right: 10, width: 300, height: 400 },
             value: '',
             stylesheets: [sc_static('test')]
           })
