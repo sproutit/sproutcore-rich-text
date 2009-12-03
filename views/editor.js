@@ -635,19 +635,25 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   defaultColor: function() {
+    if (!this.get('editorIsReady')) return null;
+
     var body = this.$inputBody().get(0);
     return this._standardizeColor(this.getStyle(body, 'color'));
-  }.property().cacheable(),
+  }.property('editorIsReady').cacheable(),
 
   defaultBackgroundColor: function(){
+    if (!this.get('editorIsReady')) return null;
+
     var body = this.$inputBody().get(0);
     return this._standardizeColor(this.getStyle(body, 'background-color'));
-  }.property().cacheable(),
+  }.property('editorIsReady').cacheable(),
 
   defaultFontSize: function(){
+    if (!this.get('editorIsReady')) return null;
+
     var body = this.$inputBody().get(0);
     return this._standardizeFontSize(this.getStyle(body, 'font-size'));
-  }.property().cacheable(),
+  }.property('editorIsReady').cacheable(),
 
   _basicSelectionModifier: function(property, type, val) {
     if (!this.get('editorIsReady')) return false;
