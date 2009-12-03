@@ -296,8 +296,8 @@ RichText.EditorView = SC.FieldView.extend(
   // Based on github.com/etgryphon/sproutcore-ui
   querySelection: function() {
     if (SC.browser.msie) {
-      var rawSelection = this._iframe.document.selection.createRange(),
-          selection = rawSelection.text(),
+      var rawSelection = this.$inputDocument().get(0).selection.createRange(),
+          selection = rawSelection.text,
           selectionElement;
 
       if (SC.none(selection)) selection = '';
