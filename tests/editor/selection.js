@@ -35,7 +35,8 @@ module("RichText.EditorView",{
 
 test('selection', function(){
   ReadyCallback.run(view, function(){
-    createSelection(view);
+    var node = view.$inputBody()[0];
+    createSelection(view, node);
     equals(view.get('selection'), 'testing', 'selection should be "testing"');
   });
 });
@@ -43,28 +44,28 @@ test('selection', function(){
 test('selectionElement', function(){
   ReadyCallback.run(view2, function(){
     var node = view2.$inputBody().find('span').get(0);
-    createSelection(view2);
+    createSelection(view2, view2.$inputBody()[0]);
     equals(view2.get('selectionElement'), node, 'selectionElement should be &lt;span&gt;');
   });
 });
 
 test('cursorPos', function(){
   ReadyCallback.run(view2, function(){
-    // TextNode in <span>
     var node = view2.$inputBody().find('span').contents()[0];
-    createSelection(view2, { startNode: node, startOffset: 2 });
+    createSelection(view2, node, { startOffset: 3, endOffset: 3 });
 
-    equals(view2.get('cursorPos'), 2, 'cursorPos should be 2');
+    equals(view2.get('cursorPos'), 3, 'cursorPos should be accurate');
   });
 });
 
 test('gets selection style', function(){
   ReadyCallback.run(view2, function(){
-    // TextNode in <span>
     var node = view2.$inputBody().find('span').contents()[0];
-    createSelection(view2, { startNode: node, startOffset: 2 });
+        result = (SC.browser.msie) ? 700 : 'bold';
 
-    equals(view2.getSelectionStyle('font-weight'), 'bold', 'font-weight should be bold');
+    createSelection(view2, node, { startOffset: 2 });
+
+    equals(view2.getSelectionStyle('font-weight'), result, 'font-weight should be bold');
   });
 });
 
@@ -81,7 +82,7 @@ test('gets default color', function(){
 
 test('gets default background color', function(){
   ReadyCallback.run(view, function(){
-    var result = (SC.browser.mozilla) ? null : '#000000'; // Won't be set in FF
+    var result = (SC.browser.mozilla || SC.browser.safari) ? null : '#ffffff';
     equals(view.get('defaultBackgroundColor'), result,
             'defaultBackgroundColor should be ' + (result === null ? 'null' : result));
   });

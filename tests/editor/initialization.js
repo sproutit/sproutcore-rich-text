@@ -46,9 +46,11 @@ test("renders an iframe input tag with appropriate attributes", function() {
 
 test('should add stylesheet link tags', function(){
   ReadyCallback.run(view2, function(){
-    equals(view2.$inputDocument().find('head').html().trim(),
-            '<link rel="stylesheet" href="'+sc_static('test')+'" type="text/css" charset="utf-8">',
-            'should have link tag');
+    var result = (SC.browser.msie) ?
+                  '<LINK rel=stylesheet type=text/css href="'+sc_static('test')+'" charset=utf-8>' :
+                  '<link rel="stylesheet" href="'+sc_static('test')+'" type="text/css" charset="utf-8">';
+
+    equals(escapeHTML(view2.$inputDocument().find('head').html().trim()), escapeHTML(result), 'should have link tag');
   });
 });
 

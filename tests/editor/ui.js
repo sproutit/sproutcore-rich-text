@@ -35,17 +35,22 @@ test('setting value updates iframe body', function(){
 
 test('rawFieldValue should get iframe html', function(){
   ReadyCallback.run(view, function(){
-    view.$inputBody().html('P1<br><br>P2');
-    equals(view.rawFieldValue(), 'P1<br><br>P2', 'raw value should be "P1<br><br>P2"');
+    view.$inputBody().html('p1<br><br>p2');
+    equals(escapeHTML(view.rawFieldValue().toLowerCase()), escapeHTML('p1<br><br>p2'),
+            'raw value should match iframe html');
   });
 });
 
 test('value should get sanitized html', function(){
   ReadyCallback.run(view, function(){
-    view.$inputBody().html('P1<br><br>P2');
+    var html = (SC.browser.msie) ?
+                  '<P>p1</P>\n<P>&nbsp;</P>\n<P>p2</P>' :
+                  'p1<br><br>p2';
+
+    view.$inputBody().html(html);
     view._field_fieldValueDidChange();
-    // escaping makes it easier to read
-    equals(view.get('value'), '<p>P1</p>\n\n<p>P2</p>', 'value should be "<p>P1</p>\n\n<p>P2</p>"');
+
+    equals(escapeHTML(view.get('value')), escapeHTML('<p>p1</p>\n\n<p>p2</p>'), 'value should be sanitized');
   });
 });
 

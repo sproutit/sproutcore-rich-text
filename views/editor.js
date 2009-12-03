@@ -354,14 +354,12 @@ RichText.EditorView = SC.FieldView.extend(
       }
 
       cursorPos =  this._anchorNodeOffset(anchor) + offset;
-
-    // TODO: The following has not been tested!
-    /* FIXME the following works wrong in Opera when the document is longer than 32767 chars */
     } else if (inputDocument.selection) {
       var range = inputDocument.selection.createRange();
-      var bookmark = range.getBookmark();
-      /* FIXME the following works wrong when the document is longer than 65535 chars */
-      cursorPos = bookmark.charCodeAt(2) - 11; /* Undocumented function */
+
+      range.moveStart('sentence', -1000000);
+
+      cursorPos = range.text.length;
     }
 
     this.setIfChanged('cursorPos', cursorPos);
@@ -415,6 +413,7 @@ RichText.EditorView = SC.FieldView.extend(
     var idx;
 
     if (!color || color.match(/[0-9a-f]{6}/i)) return color;
+
     var m = color.toLowerCase().match(/^(rgba?|hsla?)\(([\s\.\-,%0-9]+)\)/);
     if(m){
       var c = m[2].split(/\s*,\s*/), l = c.length, t = m[1];
@@ -446,6 +445,10 @@ RichText.EditorView = SC.FieldView.extend(
   // From wysihat
   _colorFromArray: function(a) {
     var arr = [], idx;
+
+    // Entirely transparent, so we don't really have a valid value
+    if (a[3] === 0 || a[3] === '0') return null;
+
     for(idx=0; idx < 3 && idx < a.length; idx++){
       var s = parseInt(a[idx], 10).toString(16);
       arr.push(s.length < 2 ? "0" + s : s);
