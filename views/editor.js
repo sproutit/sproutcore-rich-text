@@ -52,42 +52,19 @@ RichText.EditorView = SC.FieldView.extend(
     return this.$inputDocument().map(function(){ return this.body; });
   },
 
-// Callbacks
+// fieldValue actions
 
-  fieldValueDidChange: function(partialChange) {
-    var previousRawFieldValue = this.get('rawFieldValue');
+  fieldValue: function() {
+    return RichText.HtmlSanitizer.formatHTMLInput(sc_super());
+  }.property('value', 'validator').cacheable(),
 
-    this.queryRawFieldValue();
-
-    if (this.get('rawFieldValue') !== previousRawFieldValue) {
-      // collect the field value and convert it back to a value
-      var fieldValue = this.getFieldValue();
-      var value = this.objectForFieldValue(fieldValue, partialChange);
-
-      // Cache this so we can do some checks with it
-      this._lastSetFieldValue = value;
-
-      this.setIfChanged('value', value);
-    }
+  setFieldValueIfChanged: function(newValue) {
+    if (newValue !== this.getFieldValue()) this.setFieldValue(newValue);
+    return this;
   },
 
-// Helpers
-
-  queryRawFieldValue: function(){
-    var value;
-
+  setFieldValue: function(newValue) {
     if (this.get('editorIsReady')) {
-      var inputBody = this.$inputBody();
-      value = inputBody.html();
-    }
-
-    this.set('rawFieldValue', value);
-  },
-
-// Accessors
-
-  setRawFieldValue: function(newValue) {
-    if (this.get('editorIsReady') && newValue !== this.get('rawFieldValue')) {
       var inputBody = this.$inputBody();
       inputBody.html(newValue);
     }
@@ -95,26 +72,23 @@ RichText.EditorView = SC.FieldView.extend(
     return this;
   },
 
-  setFieldValue: function(newValue) {
-    if (!newValue) newValue = ''; // Can't handle null
-
-    newValue = RichText.HtmlSanitizer.formatHTMLInput(newValue);
-    this.setRawFieldValue(newValue);
-
-    return this;
+  getFieldValue: function() {
+    return this.get('editorIsReady') ? this.$inputBody().html() : null;
   },
 
-  getFieldValue: function() {
-    var rawFieldValue = this.get('rawFieldValue') || '';
-    return RichText.HtmlSanitizer.formatHTMLOutput(rawFieldValue);
+  fieldValueDidChange: function(partialChange) {
+    // collect the field value and convert it back to a value
+    var fieldValue = this.getFieldValue();
+    var value = this.objectForFieldValue(fieldValue, partialChange);
+    value = RichText.HtmlSanitizer.formatHTMLOutput(value);
+    this.setIfChanged('value', value);
   },
 
   _field_valueDidChange: function() {
-    // If this was triggered by fieldValueDidChange, we can ignore it
-    if(this._lastSetFieldValue !== this.get('fieldValue')) {
-      this.setFieldValue(this.get('fieldValue'));
-    }
+    this.setFieldValueIfChanged(this.get('fieldValue'));
   }.observes('value'),
+
+// Rendering
 
   render: function(context, firstTime) {
     arguments.callee.base.apply(this,arguments) ;
