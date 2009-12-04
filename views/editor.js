@@ -359,7 +359,7 @@ RichText.EditorView = SC.FieldView.extend(
         offset = 0;
       }
 
-      cursorPos =  this._anchorNodeOffset(anchor) + offset;
+      cursorPos = anchor ? (this._anchorNodeOffset(anchor) + offset) : null;
     } else if (inputDocument.selection) {
       var range = inputDocument.selection.createRange();
 
