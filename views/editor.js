@@ -52,13 +52,45 @@ RichText.EditorView = SC.FieldView.extend(
     return this.$inputDocument().map(function(){ return this.body; });
   },
 
+// Callbacks
+
+  fieldValueDidChange: function(partialChange) {
+    var previousRawFieldValue = this.get('rawFieldValue');
+
+    this.queryRawFieldValue();
+
+    if (this.get('rawFieldValue') !== previousRawFieldValue) {
+      // collect the field value and convert it back to a value
+      var fieldValue = this.getFieldValue();
+      var value = this.objectForFieldValue(fieldValue, partialChange);
+
+      // Cache this so we can do some checks with it
+      this._lastSetFieldValue = value;
+
+      this.setIfChanged('value', value);
+    }
+  },
+
+// Helpers
+
+  queryRawFieldValue: function(){
+    var value;
+
+    if (this.get('editorIsReady')) {
+      var inputBody = this.$inputBody();
+      value = inputBody.html();
+    }
+
+    this.set('rawFieldValue', value);
+  },
+
 // Accessors
 
   setRawFieldValue: function(newValue) {
-    if (!this.get('editorIsReady')) return null;
-
-    var inputBody = this.$inputBody();
-    inputBody.html(newValue);
+    if (this.get('editorIsReady') && newValue !== this.get('rawFieldValue')) {
+      var inputBody = this.$inputBody();
+      inputBody.html(newValue);
+    }
 
     return this;
   },
@@ -72,20 +104,16 @@ RichText.EditorView = SC.FieldView.extend(
     return this;
   },
 
-  rawFieldValue: function(){
-    if (!this.get('editorIsReady')) return null;
-
-    var inputBody = this.$inputBody();
-    return inputBody.html();
-  },
-
   getFieldValue: function() {
-    var rawFieldValue = this.rawFieldValue() || '';
+    var rawFieldValue = this.get('rawFieldValue') || '';
     return RichText.HtmlSanitizer.formatHTMLOutput(rawFieldValue);
   },
 
   _field_valueDidChange: function() {
-    if(this.getFieldValue() != this.get('fieldValue')) this.setFieldValue(this.get('fieldValue'));
+    // If this was triggered by fieldValueDidChange, we can ignore it
+    if(this._lastSetFieldValue !== this.get('fieldValue')) {
+      this.setFieldValue(this.get('fieldValue'));
+    }
   }.observes('value'),
 
   render: function(context, firstTime) {
@@ -246,9 +274,9 @@ RichText.EditorView = SC.FieldView.extend(
     this.querySelection();
     this.queryCursorPos();
 
-    if(this.getFieldValue() !== this.get('value')) {
+    //if(this.getFieldValue() !== this.get('value')) {
       this._field_fieldValueDidChange(evt);
-    }
+    //}
   },
 
   mouseUp: function(evt){
@@ -259,6 +287,8 @@ RichText.EditorView = SC.FieldView.extend(
   pasteCaught: function(evt){
     this.querySelection();
     this.queryCursorPos();
+
+    this._field_fieldValueDidChange(evt);
   },
 
   _loseBlur: function(){
