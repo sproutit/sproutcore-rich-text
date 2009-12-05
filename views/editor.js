@@ -73,7 +73,8 @@ RichText.EditorView = SC.FieldView.extend(
     var value = this.objectForFieldValue(fieldValue, partialChange);
     value = RichText.HtmlSanitizer.formatHTMLOutput(value);
 
-    // Since we just got this value from the field there's no point in updating the field
+    // Since we just got this value from the field there's no point in updating the field,
+    // furthermore, fieldValue may not be the actual value of the field and if we update, the cursor resets!
     // NOTE: I keep thinking there's a better way to do this, but I can't figure it out
     this._skipSetFieldValue = YES;
     SC.RunLoop.begin();
