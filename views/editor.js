@@ -58,17 +58,8 @@ RichText.EditorView = SC.FieldView.extend(
     return RichText.HtmlSanitizer.formatHTMLInput(sc_super());
   }.property('value', 'validator').cacheable(),
 
-  setFieldValueIfChanged: function(newValue) {
-    if (newValue !== this.getFieldValue()) this.setFieldValue(newValue);
-    return this;
-  },
-
   setFieldValue: function(newValue) {
-    if (this.get('editorIsReady')) {
-      var inputBody = this.$inputBody();
-      inputBody.html(newValue);
-    }
-
+    if (this.get('editorIsReady')) this.$inputBody().html(newValue);
     return this;
   },
 
@@ -81,11 +72,18 @@ RichText.EditorView = SC.FieldView.extend(
     var fieldValue = this.getFieldValue();
     var value = this.objectForFieldValue(fieldValue, partialChange);
     value = RichText.HtmlSanitizer.formatHTMLOutput(value);
+
+    // Since we just got this value from the field there's no point in updating the field
+    // NOTE: I keep thinking there's a better way to do this, but I can't figure it out
+    this._skipSetFieldValue = YES;
+    SC.RunLoop.begin();
     this.setIfChanged('value', value);
+    SC.RunLoop.end();
+    this._skipSetFieldValue = NO;
   },
 
   _field_valueDidChange: function() {
-    this.setFieldValueIfChanged(this.get('fieldValue'));
+    if (!this._skipSetFieldValue) this.setFieldValue(this.get('fieldValue'));
   }.observes('value'),
 
 // Rendering
