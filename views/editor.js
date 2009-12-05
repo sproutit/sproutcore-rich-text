@@ -54,6 +54,20 @@ RichText.EditorView = SC.FieldView.extend(
 
 // fieldValue actions
 
+  value: function(key, newValue) {
+    if (newValue !== undefined) {
+      this.setValueWithoutField(newValue);
+      if (this._value !== newValue) this.setFieldValue(this.get('fieldValue'));
+    }
+    return this._value;
+  }.property().cacheable(),
+
+  setValueWithoutField: function(newValue) {
+    this.propertyWillChange('value');
+    this._value = newValue;
+    this.propertyDidChange('value');
+  },
+
   fieldValue: function() {
     return RichText.HtmlSanitizer.formatHTMLInput(sc_super());
   }.property('value', 'validator').cacheable(),
@@ -73,19 +87,11 @@ RichText.EditorView = SC.FieldView.extend(
     var value = this.objectForFieldValue(fieldValue, partialChange);
     value = RichText.HtmlSanitizer.formatHTMLOutput(value);
 
-    // Since we just got this value from the field there's no point in updating the field,
-    // furthermore, fieldValue may not be the actual value of the field and if we update, the cursor resets!
-    // NOTE: I keep thinking there's a better way to do this, but I can't figure it out
-    this._skipSetFieldValue = YES;
-    SC.RunLoop.begin();
-    this.setIfChanged('value', value);
-    SC.RunLoop.end();
-    this._skipSetFieldValue = NO;
+    if (this.get('value') !== value) this.setValueWithoutField(value);
   },
 
-  _field_valueDidChange: function() {
-    if (!this._skipSetFieldValue) this.setFieldValue(this.get('fieldValue'));
-  }.observes('value'),
+  // Do nothing, we're handling it in the computedProperty for 'value'
+  _field_valueDidChange: function() { },
 
 // Rendering
 
