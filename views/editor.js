@@ -890,16 +890,19 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   iframeExecCommand: function() {
+    if (!this.get('editorIsReady')) return null;
     var inputDocumentInstance = this.$inputDocument().get(0);
     return inputDocumentInstance.execCommand.apply(inputDocumentInstance, arguments);
   },
 
   iframeQueryState: function() {
+    if (!this.get('editorIsReady')) return null;
     var inputDocumentInstance = this.$inputDocument().get(0);
     return inputDocumentInstance.queryCommandState.apply(inputDocumentInstance, arguments);
   },
 
   iframeQueryEnabled: function() {
+    if (!this.get('editorIsReady')) return null;
     var inputDocumentInstance = this.$inputDocument().get(0);
     return inputDocumentInstance.queryCommandEnabled.apply(inputDocumentInstance, arguments);
   }
