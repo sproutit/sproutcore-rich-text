@@ -256,6 +256,9 @@ RichText.EditorView = SC.FieldView.extend(
   mouseUp: function(evt){
     this.querySelection();
     this.queryCursorPos();
+
+    // Not setting this will cause problems with deselecting text
+    evt.allowDefault();
   },
 
   pasteCaught: function(evt){
