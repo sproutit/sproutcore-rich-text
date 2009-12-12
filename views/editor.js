@@ -56,9 +56,13 @@ RichText.EditorView = SC.FieldView.extend(
 
   value: function(key, newValue) {
     if (newValue !== undefined) {
+      if (typeof(newValue) === 'string') newValue = RichText.FormattedText.create({ value: value });
+
       this.setValueWithoutField(newValue);
+
       if (this._value !== newValue) this.setFieldValue(this.get('fieldValue'));
     }
+
     return this._value;
   }.property().cacheable(),
 
@@ -69,11 +73,12 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   fieldValue: function() {
-    return RichText.HtmlSanitizer.formatHTMLInput(sc_super());
+    var value = sc_super();
+    return value ? RichText.HtmlSanitizer.formatHTMLInput(value.toString()) : '';
   }.property('value', 'validator').cacheable(),
 
   setFieldValue: function(newValue) {
-    if (this.get('editorIsReady')) this.$inputBody().html(newValue);
+    if (this.get('editorIsReady')) this.$inputBody().html(newValue.toString());
     return this;
   },
 
@@ -85,7 +90,7 @@ RichText.EditorView = SC.FieldView.extend(
     // collect the field value and convert it back to a value
     var fieldValue = this.getFieldValue();
     var value = this.objectForFieldValue(fieldValue, partialChange);
-    value = RichText.HtmlSanitizer.formatHTMLOutput(value);
+    value = RichText.FormattedText.create({ value: value });
 
     if (this.get('value') !== value) this.setValueWithoutField(value);
   },
