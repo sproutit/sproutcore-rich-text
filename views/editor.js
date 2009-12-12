@@ -56,11 +56,15 @@ RichText.EditorView = SC.FieldView.extend(
 
   value: function(key, newValue) {
     if (newValue !== undefined) {
-      if (typeof(newValue) === 'string') newValue = RichText.FormattedText.create({ value: value });
 
+      // Convert to FormattedText instance
+      if (typeof(newValue) === 'string') {
+        newValue = RichText.FormattedText.create({ value: newValue });
+      }
+
+      var valueChanged = (this._value !== newValue);
       this.setValueWithoutField(newValue);
-
-      if (this._value !== newValue) this.setFieldValue(this.get('fieldValue'));
+      if (valueChanged) this.setFieldValue(this.get('fieldValue'));
     }
 
     return this._value;
