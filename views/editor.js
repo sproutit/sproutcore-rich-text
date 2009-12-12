@@ -109,20 +109,17 @@ RichText.EditorView = SC.FieldView.extend(
 
     var name = SC.guidFor(this);
 
-    // always have at least an empty string
-    var v = this.get('fieldValue');
-    if (SC.none(v)) v = '';
+    // TODO: Find a way to set this without calling fieldValue which triggers sanitizing
 
-    // update layer classes always
-    context.setClass('not-empty', v.length > 0);
+    // // always have at least an empty string
+    // var v = this.get('fieldValue');
+    // if (SC.none(v)) v = '';
+    // 
+    // // update layer classes always
+    // context.setClass('not-empty', v.length > 0);
 
-    this._renderField(context, firstTime, v) ;
-  },
 
-  _renderField: function(context, firstTime, value) {
     if (firstTime) {
-      var name = SC.guidFor(this);
-
       context.push('<span class="border"></span>');
 
       // Render the iframe itself, and close off the padding.
