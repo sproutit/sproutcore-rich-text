@@ -78,7 +78,7 @@ RichText.EditorView = SC.FieldView.extend(
 
   fieldValue: function() {
     var value = sc_super();
-    return value ? RichText.HtmlSanitizer.formatHTMLInput(value.toString()) : '';
+    return value ? RichText.htmlSanitizer.formatHTMLInput(value.toString()) : '';
   }.property('value', 'validator').cacheable(),
 
   setFieldValue: function(newValue) {
