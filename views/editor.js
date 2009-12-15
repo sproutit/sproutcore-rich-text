@@ -250,6 +250,33 @@ RichText.EditorView = SC.FieldView.extend(
     SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
   },
 
+  keyDown: function(evt) {
+    if (evt.metaKey) {
+      switch(SC.PRINTABLE_KEYS[evt.which]) {
+        case 'b':
+          this.set('selectionIsBold', !this.get('selectionIsBold'));
+          return YES;
+        case 'u':
+          this.set('selectionIsUnderlined', !this.get('selectionIsUnderlined'));
+          return YES;
+        case 'i':
+          this.set('selectionIsItalicized', !this.get('selectionIsItalicized'));
+          return YES;
+        case 'z':
+          evt.shiftKey ? this.redoChange() : this.undoChange();
+          return YES;
+        case 'y':
+          this.redoChange();
+          return YES;
+      }
+    } else if (evt.which === SC.Event.KEY_TAB) {
+      evt.shiftKey ? this.selectionOutdent() : this.selectionIndent();
+      return YES;
+    }
+
+    evt.allowDefault();
+  },
+
   keyUp: function(evt){
     this.querySelection();
     this.queryCursorPos();
