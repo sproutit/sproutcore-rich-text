@@ -94,9 +94,12 @@ RichText.EditorView = SC.FieldView.extend(
     // collect the field value and convert it back to a value
     var fieldValue = this.getFieldValue();
     var value = this.objectForFieldValue(fieldValue, partialChange);
-    value = RichText.FormattedText.create({ value: value });
 
-    if (this.get('value') !== value) this.setValueWithoutField(value);
+    // Compare raw values
+    if (this.getPath('value.value') !== value) {
+      value = RichText.FormattedText.create({ value: value });
+      this.setValueWithoutField(value);
+    }
   },
 
   // Do nothing, we're handling it in the computedProperty for 'value'
