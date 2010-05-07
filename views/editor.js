@@ -78,7 +78,7 @@ RichText.EditorView = SC.FieldView.extend(
 
   fieldValue: function() {
     var value = sc_super();
-    return value ? RichText.htmlSanitizer.formatHTMLInput(value.toString()) : '';
+    return value ? RichText.HtmlSanitizer.formatHTMLInput(value.toString()) : '';
   }.property('value', 'validator').cacheable(),
 
   setFieldValue: function(newValue) {
@@ -457,106 +457,6 @@ RichText.EditorView = SC.FieldView.extend(
 
 // Editor actions
 
-  // From wysihat
-  _standardizeColor: function(color) {
-    var idx;
-
-    if (!color || color.match(/[0-9a-f]{6}/i)) return color;
-
-    var m = color.toLowerCase().match(/^(rgba?|hsla?)\(([\s\.\-,%0-9]+)\)/);
-    if(m){
-      var c = m[2].split(/\s*,\s*/), l = c.length, t = m[1];
-      if((t == "rgb" && l == 3) || (t == "rgba" && l == 4)){
-        var r = c[0];
-        if(r.charAt(r.length - 1) == "%"){
-          var a = [];
-          for(idx=0; idx < c.length; idx++) a.push(parseFloat(c[idx]) * 2.56);
-          if(l == 4){ a[3] = c[3]; }
-          return this._colorFromArray(a);
-        }
-        return this._colorFromArray(c);
-      }
-      if((t == "hsl" && l == 3) || (t == "hsla" && l == 4)){
-        var H = ((parseFloat(c[0]) % 360) + 360) % 360 / 360,
-          S = parseFloat(c[1]) / 100,
-          L = parseFloat(c[2]) / 100,
-          m2 = L <= 0.5 ? L * (S + 1) : L + S - L * S,
-          m1 = 2 * L - m2,
-          a = [this._hue2rgb(m1, m2, H + 1 / 3) * 256,
-            this._hue2rgb(m1, m2, H) * 256, this._hue2rgb(m1, m2, H - 1 / 3) * 256, 1];
-        if(l == 4){ a[3] = c[3]; }
-        return this._colorFromArray(a);
-      }
-    }
-    return null; // dojo.Color
-  },
-
-  // From wysihat
-  _colorFromArray: function(a) {
-    var arr = [], idx;
-
-    // Entirely transparent, so we don't really have a valid value
-    if (a[3] === 0 || a[3] === '0') return null;
-
-    for(idx=0; idx < 3 && idx < a.length; idx++){
-      var s = parseInt(a[idx], 10).toString(16);
-      arr.push(s.length < 2 ? "0" + s : s);
-    };
-    return "#" + arr.join(""); // String
-  },
-
-  _hue2rgb: function(m1, m2, h){
-    if(h < 0){ ++h; }
-    if(h > 1){ --h; }
-    var h6 = 6 * h;
-    if(h6 < 1){ return m1 + (m2 - m1) * h6; }
-    if(2 * h < 1){ return m2; }
-    if(3 * h < 2){ return m1 + (m2 - m1) * (2 / 3 - h) * 6; }
-    return m1;
-  },
-
-  // From wysihat
-  fontSizeNames:  function() {
-    var fontSizeNames = 'xxx-small xx-small x-small small medium large x-large xx-large'.w();
-
-    if (SC.browser.safari) {
-      fontSizeNames.shift();
-      fontSizeNames.push('-webkit-xxx-large');
-    }
-
-    return fontSizeNames;
-  }.property().cacheable(),
-
-  fontSizePixels: '9 10 13 16 18 24 32 48'.w(),
-
-  // From wysihat
-  _standardizeFontSize: function(fontSize) {
-    var newSize, match;
-
-    if (match = fontSize.match(/^(\d+)px$/)) {
-      var fontSizePixels = this.get('fontSizePixels'),
-          tempSize = parseInt(match[1], 10),
-          idx;
-
-      newSize = 0;
-      for(idx=0; idx < fontSizePixels.length; idx++) {
-        if (tempSize > fontSizePixels[idx]) {
-          newSize = idx + 1;
-        } else {
-          break;
-        }
-      }
-
-      return newSize;
-    } else {
-      newSize = this.get('fontSizeNames').indexOf(fontSize);
-      if (newSize >= 0) return newSize;
-    }
-
-    // Fallback
-    return parseInt(fontSize, 10);
-  },
-
   // borrowed with slight changes from jQuery
   getStyle: function(elem, name, force) {
     var defaultView = this.$inputWindow().get(0),
@@ -681,21 +581,21 @@ RichText.EditorView = SC.FieldView.extend(
     if (!this.get('editorIsReady')) return null;
 
     var body = this.$inputBody().get(0);
-    return this._standardizeColor(this.getStyle(body, 'color'));
+    return RichText.HtmlSanitizer.standardizeColor(this.getStyle(body, 'color'));
   }.property('editorIsReady').cacheable(),
 
   defaultBackgroundColor: function(){
     if (!this.get('editorIsReady')) return null;
 
     var body = this.$inputBody().get(0);
-    return this._standardizeColor(this.getStyle(body, 'background-color'));
+    return RichText.HtmlSanitizer.standardizeColor(this.getStyle(body, 'background-color'));
   }.property('editorIsReady').cacheable(),
 
   defaultFontSize: function(){
     if (!this.get('editorIsReady')) return null;
 
     var body = this.$inputBody().get(0);
-    return this._standardizeFontSize(this.getStyle(body, 'font-size'));
+    return RichText.HtmlSanitizer.standardizeFontSize(this.getStyle(body, 'font-size'));
   }.property('editorIsReady').cacheable(),
 
   _basicSelectionModifier: function(property, type, val) {
@@ -725,7 +625,7 @@ RichText.EditorView = SC.FieldView.extend(
       if(x) this.changedSelection();
     }
 
-    return this._standardizeColor(this.getSelectionStyle('color'));
+    return RichText.HtmlSanitizer.standardizeColor(this.getSelectionStyle('color'));
 
   }.property('selectionElement').cacheable(),
 
@@ -742,7 +642,7 @@ RichText.EditorView = SC.FieldView.extend(
       if(x) this.changedSelection();
     }
 
-    return this._standardizeColor(this.getSelectionStyle('background-color'));
+    return RichText.HtmlSanitizer.standardizeColor(this.getSelectionStyle('background-color'));
 
   }.property('selectionElement').cacheable(),
 
@@ -757,7 +657,7 @@ RichText.EditorView = SC.FieldView.extend(
       if(x) this.changedSelection();
     }
 
-    return this._standardizeFontSize(this.getSelectionStyle('font-size'));
+    return RichText.HtmlSanitizer.standardizeFontSize(this.getSelectionStyle('font-size'));
 
   }.property('selectionElement').cacheable(),
 
