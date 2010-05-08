@@ -70,7 +70,7 @@ RichText.RichTextSelection = SC.Object.extend({
       if(x) editor.changedSelection();
     }
 
-    var fontSize = this.get('font-size');
+    var fontSize = this.getStyle('font-size');
     return fontSize && RichText.HtmlSanitizer.standardizeFontSize(fontSize);
 
   }.property().cacheable(),
@@ -198,13 +198,13 @@ RichText.RichTextSelection = SC.Object.extend({
   // COMMANDS
 
   increaseSize: function() {
-    var selectionFontSize = this.get('selectionFontSize');
-    this.set('selectionFontSize', selectionFontSize + 1);
+    var fontSize = this.get('fontSize');
+    this.set('fontSize', fontSize + 1);
   },
 
   decreaseSize: function() {
-    var selectionFontSize = this.get('selectionFontSize');
-    this.set('selectionFontSize', selectionFontSize - 1);
+    var fontSize = this.get('fontSize');
+    this.set('fontSize', fontSize - 1);
   },
 
   indent: function() {
