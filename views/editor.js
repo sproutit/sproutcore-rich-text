@@ -40,6 +40,8 @@ RichText.EditorView = SC.FieldView.extend(
   // TODO: Add support for disabling
   // TODO: Can hints be made to work?
 
+  _fieldValueUpdateDisableCount: 0,
+
 // CoreQuery Accessors
 
   $input: function(){
@@ -60,27 +62,53 @@ RichText.EditorView = SC.FieldView.extend(
 
 // fieldValue actions
 
-  value: function(key, newValue) {
-    if (newValue !== undefined) {
+  disableValueUpdateForField: function(){
+    this._fieldValueUpdateDisableCount++;
+  },
 
-      // Convert to FormattedText instance
-      if (typeof(newValue) === 'string') {
-        newValue = RichText.FormattedText.create({ value: newValue });
-      }
+  enableValueUpdateForField: function(){
+    if(this._fieldValueUpdateDisableCount == 0) return;
+    this._fieldValueUpdateDisableCount--;
+  },
 
-      var valueChanged = (this._value !== newValue);
-      this.setValueWithoutField(newValue);
-      if (valueChanged) this.setFieldValue(this.get('fieldValue'));
+  fieldValueUpdateEnabled: function(){
+    return this._fieldValueUpdateDisableCount == 0;
+  },
+
+  valueDidChange: function(){
+    var newValue = this.get('value');
+
+    // Convert to FormattedText instance
+    if (typeof(newValue) === 'string') {
+      newValue = RichText.FormattedText.create({ value: newValue });
     }
 
-    return this._value;
-  }.property().cacheable(),
+    if (this._value !== newValue) {
+      this._value = newValue;
+      if (this.fieldValueUpdateEnabled()) this.setFieldValue(this.get('fieldValue'));
+    }
+  }.observes('value'),
 
-  setValueWithoutField: function(newValue) {
-    this.propertyWillChange('value');
-    this._value = newValue;
-    this.propertyDidChange('value');
-  },
+  // value: function(key, newValue) {
+  //   if (newValue !== undefined) {
+  //     // Convert to FormattedText instance
+  //     if (typeof(newValue) === 'string') {
+  //       newValue = RichText.FormattedText.create({ value: newValue });
+  //     }
+  // 
+  //     var valueChanged = (this._value !== newValue);
+  //     this.setValueWithoutField(newValue);
+  //     if (valueChanged) this.setFieldValue(this.get('fieldValue'));
+  //   }
+  // 
+  //   return this._value;
+  // }.property().cacheable(),
+
+  // setValueWithoutField: function(newValue) {
+  //   this.propertyWillChange('value');
+  //   this._value = newValue;
+  //   this.propertyDidChange('value');
+  // },
 
   fieldValue: function() {
     var value = sc_super();
@@ -88,7 +116,9 @@ RichText.EditorView = SC.FieldView.extend(
   }.property('value', 'validator').cacheable(),
 
   setFieldValue: function(newValue) {
+    this.propertyWillChange('fieldValue');
     if (this.get('editorIsReady')) this.$inputBody().html(newValue.toString());
+    this.propertyDidChange('fieldValue');
     return this;
   },
 
@@ -102,9 +132,11 @@ RichText.EditorView = SC.FieldView.extend(
     var value = this.objectForFieldValue(fieldValue, partialChange);
 
     // Compare raw values
-    if (this.getPath('value.value') !== value) {
+    if (!this._value || this._value.get('value') !== value) {
       value = RichText.FormattedText.create({ value: value });
-      this.setValueWithoutField(value);
+      this.disableValueUpdateForField();
+      this.set('value', value);
+      this.enableValueUpdateForField();
     }
   },
 
