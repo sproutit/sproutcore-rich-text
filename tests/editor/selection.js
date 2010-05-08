@@ -36,11 +36,11 @@ module("RichText.EditorView",{
   }
 });
 
-test('selection', function(){
+test('selection text', function(){
   ReadyCallback.run(view, function(){
     var node = view.$inputBody()[0];
     createSelection(view, node);
-    equals(view.get('selection'), 'testing', 'selection should be "testing"');
+    equals(view.get('selection').get('text'), 'testing', 'selection text should be "testing"');
   });
 });
 
@@ -68,7 +68,7 @@ test('gets selection style', function(){
 
     createSelection(view2, node, { startOffset: 2 });
 
-    equals(view2.getSelectionStyle('font-weight'), result, 'font-weight should be bold');
+    equals(view2.get('selection').getStyle('font-weight'), result, 'font-weight should be bold');
   });
 });
 

@@ -10,18 +10,24 @@
 
   @extends SC.View
 */
+
+sc_require('system/rich_text_selection');
+
 RichText.EditorView = SC.FieldView.extend(
 /** @scope RichText.EditorView.prototype */ {
 
-  iframeRootResponder: null,
-
   value: null,
+
+  iframeRootResponder: null,
 
   classNames: ['rich-text-editor-view', 'sc-text-field-view', 'text-area'],
 
   editorIsReady: NO,
 
-  selection: '',
+  exampleSelection: RichText.RichTextSelection,
+
+  selection: null,
+  selectionText: '',
   selectionElement: null,
   cursorPos: null,
 
@@ -344,45 +350,57 @@ RichText.EditorView = SC.FieldView.extend(
 
   // Based on github.com/etgryphon/sproutcore-ui
   querySelection: function() {
+    var rawSelection,
+        selectionText = '',
+        selectionElement = null;
+
     if (SC.browser.msie) {
-      var rawSelection = this.$inputDocument().get(0).selection.createRange(),
-          selection = rawSelection.text,
-          selectionElement;
+      rawSelection = this.$inputDocument().get(0).selection.createRange();
+      selectionText = rawSelection.text;
 
       if (SC.none(selection)) selection = '';
 
       selectionElement = rawSelection.parentElement();
     } else {
-      var selection = this.$inputWindow().get(0).getSelection(),
-          selectionRange = selection.getRangeAt(0),
-          commonAncestor = selectionRange.commonAncestorContainer,
-          childNodes = commonAncestor.childNodes,
-          selectionNodes = [], childNode, idx;
+      rawSelection = this.$inputWindow().get(0).getSelection();
 
-      for(idx=0; idx < childNodes.length; idx++) {
-        childNode = childNodes[idx];
-        // Check for full or partial containment and make sure it's not an empty text node
-        if (selection.containsNode(childNode, true) && !(childNode.nodeType === 3 && childNode.length === 0)) {
-          selectionNodes.push(childNode);
+      if (rawSelection.rangeCount > 0) {
+        var selectionRange = rawSelection.getRangeAt(0),
+            commonAncestor = selectionRange.commonAncestorContainer,
+            childNodes = commonAncestor.childNodes,
+            selectionNodes = [], childNode, idx;
+
+        for(idx=0; idx < childNodes.length; idx++) {
+          childNode = childNodes[idx];
+          if (childNode) {
+            // Check for full or partial containment and make sure it's not an empty text node
+            if (rawSelection.containsNode(childNode, true) && !(childNode.nodeType === 3 && childNode.length === 0)) {
+              selectionNodes.push(childNode);
+            }
+          }
         }
-      }
 
-      // If only one selection node and it's an element, use that
-      if (selectionNodes.length === 1 && selectionNodes[0].nodeType === 1) {
-        selectionElement = selectionNodes[0];
-      } else {
-        selectionElement = commonAncestor;
-      }
+        // If only one selection node and it's an element, use that
+        if (selectionNodes.length === 1 && selectionNodes[0].nodeType === 1) {
+          selectionElement = selectionNodes[0];
+        } else {
+          selectionElement = commonAncestor;
+        }
 
-      while(selectionElement && selectionElement.nodeType !== 1) selectionElement = selectionElement.parentNode;
+        while(selectionElement && selectionElement.nodeType !== 1) selectionElement = selectionElement.parentNode;
+
+        selectionText = rawSelection.toString();
+      }
     }
 
     // NOTE: Before changing this, make sure it works property with the text align button states
-    this.propertyWillChange('selection');
+    this.propertyWillChange('selectionText');
     this.propertyWillChange('selectionElement');
-    this.set('selection', selection.toString());
+    this.set('selectionText', selectionText);
     this.set('selectionElement', selectionElement);
-    this.propertyDidChange('selection');
+    // Is this necessary?
+    this.get('selection').update();
+    this.propertyDidChange('selectionText');
     this.propertyDidChange('selectionElement');
   },
 
@@ -572,10 +590,6 @@ RichText.EditorView = SC.FieldView.extend(
     return ret;
   },
 
-  getSelectionStyle: function(name, force) {
-    var elem = this.get('selectionElement');
-    return elem ? this.getStyle(elem, name, force) : null;
-  },
 
   defaultColor: function() {
     if (!this.get('editorIsReady')) return null;
@@ -598,220 +612,17 @@ RichText.EditorView = SC.FieldView.extend(
     return RichText.HtmlSanitizer.standardizeFontSize(this.getStyle(body, 'font-size'));
   }.property('editorIsReady').cacheable(),
 
-  _basicSelectionModifier: function(property, type, val) {
-    if (!this.get('editorIsReady')) return false;
-
-    if (val !== undefined) {
-      this.propertyWillChange(property);
-      var x = this.iframeExecCommand(type, false, val);
-      this.propertyDidChange(property);
-
-      if(x) this.changedSelection();
-    }
-
-    return this.iframeQueryState(type);
-  },
-
 // Formatting properties
-
-  selectionColor: function(key, val) {
-    if (!this.get('editorIsReady')) return null;
-
-    if (val !== undefined) {
-      this.propertyWillChange('selectionColor');
-      var x = this.iframeExecCommand('forecolor', false, val);
-      this.propertyDidChange('selectionColor');
-
-      if(x) this.changedSelection();
-    }
-
-    return RichText.HtmlSanitizer.standardizeColor(this.getSelectionStyle('color'));
-
-  }.property('selectionElement').cacheable(),
-
-  selectionBackgroundColor: function(key, val) {
-    if (!this.get('editorIsReady')) return null;
-
-    var bgCommand = SC.browser.mozilla ? 'hilitecolor' : 'backcolor';
-
-    if (val !== undefined) {
-      this.propertyWillChange('selectionBackgroundColor');
-      var x = this.iframeExecCommand(bgCommand, false, val);
-      this.propertyDidChange('selectionBackgroundColor');
-
-      if(x) this.changedSelection();
-    }
-
-    return RichText.HtmlSanitizer.standardizeColor(this.getSelectionStyle('background-color'));
-
-  }.property('selectionElement').cacheable(),
-
-  selectionFontSize: function(key, val) {
-    if (!this.get('editorIsReady')) return null;
-
-    if (val !== undefined) {
-      this.propertyWillChange('selectionFontSize');
-      var x = this.iframeExecCommand('fontsize', false, val);
-      this.propertyDidChange('selectionFontSize');
-
-      if(x) this.changedSelection();
-    }
-
-    return RichText.HtmlSanitizer.standardizeFontSize(this.getSelectionStyle('font-size'));
-
-  }.property('selectionElement').cacheable(),
-
-  selectionIsBold: function(key, val) {
-    return this._basicSelectionModifier('selectionIsBold', 'bold', val);
-  }.property('selection').cacheable(),
-
-  selectionIsUnderlined: function(key, val) {
-    return this._basicSelectionModifier('selectionIsUnderlined', 'underline', val);
-  }.property('selection').cacheable(),
-
-  selectionIsItalicized: function(key, val) {
-    return this._basicSelectionModifier('selectionIsItalicized', 'italic', val);
-  }.property('selection').cacheable(),
-
-  selectionIsStrikethrough: function(key, val) {
-    return this._basicSelectionModifier('selectionIsStrikethrough', 'strikethrough', val);
-  }.property('selection').cacheable(),
-
-  selectionIsLeftAligned: function(key, val) {
-    return this._basicSelectionModifier('selectionIsLeftAligned', 'justifyleft', val);
-  }.property('selection').cacheable(),
-
-  selectionIsJustified: function(key, val) {
-    return this._basicSelectionModifier('selectionIsJustified', 'justifyfull', val);
-  }.property('selection').cacheable(),
-
-  selectionIsCentered: function(key, val) {
-    return this._basicSelectionModifier('selectionIsCentered', 'justifycenter', val);
-  }.property('selection').cacheable(),
-
-  selectionIsRightAligned: function(key, val) {
-    return this._basicSelectionModifier('selectionIsRightAligned', 'justifyright', val);
-  }.property('selection').cacheable(),
-
-  selectionIsDefaultColor: function(key, val) {
-    var selectionColor, selectionBackgroundColor;
-
-    if (val === YES) {
-      this.set('selectionColor', 'inherit');
-      this.set('selectionBackgroundColor', 'transparent');
-    }
-
-    selectionColor = this.get('selectionColor');
-    selectionBackgroundColor = this.get('selectionBackgroundColor');
-
-    return (RichText.blank(selectionColor) || selectionColor === this.get('defaultColor'))
-            && (RichText.blank(selectionBackgroundColor) || selectionBackgroundColor === this.get('defaultBackgroundColor'));
-
-  }.property('selectionColor', 'selectionBackgroundColor').cacheable(),
-
-  selectionIsHighlighted: function(key, val) {
-    var selectionColor;
-
-    if (val !== undefined) {
-      val = (val) ? '#ffff00' : null; // yellow
-      this.set('selectionColor', val);
-    }
-
-    selectionColor = this.get('selectionColor');
-
-    return !RichText.blank(selectionColor)
-            && selectionColor !== this.get('defaultColor');
-
-  }.property('selectionColor').cacheable(),
-
-  selectionIsBackgroundHighlighted: function(key, val) {
-    var selectionBackgroundColor;
-
-    if (val !== undefined) {
-      val = (val) ? '#ffff00' : null; // yellow
-      this.set('selectionBackgroundColor', val);
-    }
-
-    selectionBackgroundColor = this.get('selectionBackgroundColor');
-
-    return !RichText.blank(selectionBackgroundColor)
-            && selectionBackgroundColor !== this.get('defaultBackgroundColor');
-
-  }.property('selectionBackgroundColor').cacheable(),
-
-  selectionIsDefaultSize: function(key, val) {
-    var selectionFontSize, defaultFontSize = this.get('defaultFontSize');
-
-    if (val === YES) {
-      this.set('selectionFontSize', defaultFontSize);
-    }
-
-    selectionFontSize = this.get('selectionFontSize');
-
-    return RichText.blank(selectionFontSize) || selectionFontSize === defaultFontSize;
-
-  }.property('selectionFontSize').cacheable(),
-
-  selectionIsSizeIncreased: function() {
-    var selectionFontSize = this.get('selectionFontSize');
-    return !RichText.blank(selectionFontSize) && selectionFontSize > this.get('defaultFontSize');
-  }.property('selectionFontSize').cacheable(),
-
-  selectionIsSizeDecreased: function() {
-    var selectionFontSize = this.get('selectionFontSize');
-    return !RichText.blank(selectionFontSize) && selectionFontSize < this.get('defaultFontSize');
-  }.property('selectionFontSize').cacheable(),
-
-  selectionIsSuperscript: function(key, val) {
-    return this._basicSelectionModifier('selectionIsSuperscript', 'superscript', val);
-  }.property('selection').cacheable(),
-
-  selectionIsSubscript: function(key, val) {
-    return this._basicSelectionModifier('selectionIsSubscript', 'subscript', val);
-  }.property('selection').cacheable(),
-
-  selectionIsOrderedList: function(key, val) {
-    return this._basicSelectionModifier('selectionIsOrderedList', 'insertorderedlist', val);
-  }.property('selection').cacheable(),
-
-  selectionIsUnorderedList: function(key, val) {
-    return this._basicSelectionModifier('selectionIsUnorderedList', 'insertunorderedlist', val);
-  }.property('selection').cacheable(),
 
   undoAllowed: function() {
     return this.iframeQueryEnabled('undo');
-  }.property('selection').cacheable(),
+  }.property('selectionText').cacheable(),
 
   redoAllowed: function() {
     return this.iframeQueryEnabled('redo');
-  }.property('selection').cacheable(),
+  }.property('selectionText').cacheable(),
 
 // Formatting commands
-
-  selectionIncreaseSize: function() {
-    var selectionFontSize = this.get('selectionFontSize');
-    this.set('selectionFontSize', selectionFontSize + 1);
-  },
-
-  selectionDecreaseSize: function() {
-    var selectionFontSize = this.get('selectionFontSize');
-    this.set('selectionFontSize', selectionFontSize - 1);
-  },
-
-  selectionIndent: function() {
-    this.iframeExecCommand('indent', false, YES);
-    this.changedSelection();
-  },
-
-  selectionOutdent: function() {
-    this.iframeExecCommand('outdent', false, YES);
-    this.changedSelection();
-  },
-
-  selectionRemoveFormatting: function() {
-    this.iframeExecCommand('removeformat', false, YES);
-    this.changedSelection();
-  },
 
   undoChange: function() {
     this.iframeExecCommand('undo', false, YES);
@@ -839,6 +650,11 @@ RichText.EditorView = SC.FieldView.extend(
     if (!this.get('editorIsReady')) return null;
     var inputDocumentInstance = this.$inputDocument().get(0);
     return inputDocumentInstance.queryCommandEnabled.apply(inputDocumentInstance, arguments);
+  },
+
+  init: function(){
+    sc_super();
+    this.set('selection', this.get('exampleSelection').create({ editor: this }));
   }
 
 });
