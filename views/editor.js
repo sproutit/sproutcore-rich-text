@@ -238,6 +238,9 @@ RichText.EditorView = SC.FieldView.extend(
         stylesheets = this.get('stylesheets'),
         stylesheet_url, headers = '', responder, idx;
 
+    // This has occasionally been an issue. Not sure what to do about it yet.
+    if (!inputDocumentInstance) throw "No inputDocumentInstance!";
+
     // Tried using contenteditable but it had a weird bug where you had to type something before you could delete in a field
     try {
       inputDocumentInstance.designMode = 'on';
@@ -447,7 +450,7 @@ RichText.EditorView = SC.FieldView.extend(
           anchor = selObj.anchorNode,
           offset = selObj.anchorOffset;
 
-      if (anchor.nodeType === 1) { // elementNode
+      if (anchor && anchor.nodeType === 1) { // elementNode
         anchor = anchor.childNodes[offset];
         offset = 0;
       }
