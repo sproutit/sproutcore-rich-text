@@ -40,7 +40,7 @@ RichText.EditorView = SC.FieldView.extend(
   // TODO: Add support for disabling
   // TODO: Can hints be made to work?
 
-  _fieldValueUpdateDisableCount: 0,
+  _fieldUpdateSkipCount: 0,
 
 // CoreQuery Accessors
 
@@ -62,17 +62,17 @@ RichText.EditorView = SC.FieldView.extend(
 
 // fieldValue actions
 
-  disableValueUpdateForField: function(){
-    this._fieldValueUpdateDisableCount++;
+  skipFieldUpdate: function(){
+    this._fieldUpdateSkipCount++;
   },
 
-  enableValueUpdateForField: function(){
-    if(this._fieldValueUpdateDisableCount == 0) return;
-    this._fieldValueUpdateDisableCount--;
+  didSkipFieldUpdate: function(){
+    if(this._fieldUpdateSkipCount == 0) return;
+    this._fieldUpdateSkipCount--;
   },
 
-  fieldValueUpdateEnabled: function(){
-    return this._fieldValueUpdateDisableCount == 0;
+  shouldSkipFieldUpdate: function(){
+    return this._fieldUpdateSkipCount > 0;
   },
 
   valueDidChange: function(){
@@ -85,7 +85,11 @@ RichText.EditorView = SC.FieldView.extend(
 
     if (this._value !== newValue) {
       this._value = newValue;
-      if (this.fieldValueUpdateEnabled()) this.setFieldValue(this.get('fieldValue'));
+      if (this.shouldSkipFieldUpdate()) {
+        this.didSkipFieldUpdate();
+      } else {
+        this.setFieldValue(this.get('fieldValue'));
+      }
     }
   }.observes('value'),
 
@@ -134,9 +138,8 @@ RichText.EditorView = SC.FieldView.extend(
     // Compare raw values
     if (!this._value || this._value.get('value') !== value) {
       value = RichText.FormattedText.create({ value: value });
-      this.disableValueUpdateForField();
+      this.skipFieldUpdate();
       this.set('value', value);
-      this.enableValueUpdateForField();
     }
   },
 
