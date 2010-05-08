@@ -100,6 +100,6 @@ test('editorIsReady', function(){
 
 test('designmode is set', function(){
   ReadyCallback.run(view, function(){
-    equals(view.$inputBody()[0].contentEditable, 'true', 'should be contentEditable');
+    equals(view.$inputDocument().get(0).designMode, 'on', 'should be designMode');
   });
 });

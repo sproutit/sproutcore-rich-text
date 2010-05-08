@@ -34,10 +34,10 @@ test('setting value updates iframe body', function(){
   });
 });
 
-test('rawFieldValue should get iframe html', function(){
+test('fieldValue should get iframe html', function(){
   ReadyCallback.run(view, function(){
     view.$inputBody().html('p1<br><br>p2');
-    equals(escapeHTML(view.rawFieldValue().toLowerCase()), escapeHTML('p1<br><br>p2'),
+    equals(escapeHTML(view.getFieldValue().toLowerCase()), escapeHTML('p1<br><br>p2'),
             'raw value should match iframe html');
   });
 });
