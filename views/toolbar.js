@@ -19,145 +19,145 @@ RichText.ToolbarView = SC.View.extend(
 
   strikethroughButton: RichText.ToolbarButtonView.extend({
     title: 'S',
-    valueBinding: '.parentView.editor.selection.isStrikethrough'
+    valueBinding: '*parentView.editor.selection.isStrikethrough'
   }),
 
   boldButton: RichText.ToolbarButtonView.extend({
     title: 'B',
-    valueBinding: '.parentView.editor.selection.isBold'
+    valueBinding: '*parentView.editor.selection.isBold'
   }),
 
   underlineButton: RichText.ToolbarButtonView.extend({
     title: 'U',
-    valueBinding: '.parentView.editor.selection.isUnderlined'
+    valueBinding: '*parentView.editor.selection.isUnderlined'
   }),
 
   italicsButton: RichText.ToolbarButtonView.extend({
     title: 'I',
-    valueBinding: '.parentView.editor.selection.isItalicized'
+    valueBinding: '*parentView.editor.selection.isItalicized'
   }),
 
   leftAlignButton: RichText.ToolbarButtonView.extend({
     title: 'Left',
     buttonBehavior: SC.TOGGLE_ON_BEHAVIOR,
-    valueBinding: '.parentView.editor.selection.isLeftAligned'
+    valueBinding: '*parentView.editor.selection.isLeftAligned'
   }),
 
   justifyButton: RichText.ToolbarButtonView.extend({
     title: 'Justified',
     buttonBehavior: SC.TOGGLE_ON_BEHAVIOR,
-    valueBinding: '.parentView.editor.selection.isJustified'
+    valueBinding: '*parentView.editor.selection.isJustified'
   }),
 
   centerButton: RichText.ToolbarButtonView.extend({
     title: 'Center',
     buttonBehavior: SC.TOGGLE_ON_BEHAVIOR,
-    valueBinding: '.parentView.editor.selection.isCentered'
+    valueBinding: '*parentView.editor.selection.isCentered'
   }),
 
   rightAlignButton: RichText.ToolbarButtonView.extend({
     title: 'Right',
     buttonBehavior: SC.TOGGLE_ON_BEHAVIOR,
-    valueBinding: '.parentView.editor.selection.isRightAligned'
+    valueBinding: '*parentView.editor.selection.isRightAligned'
   }),
 
   defaultColorButton: RichText.ToolbarButtonView.extend({
     title: 'Default Color',
     buttonBehavior: SC.TOGGLE_ON_BEHAVIOR,
-    valueBinding: '.parentView.editor.selection.isDefaultColor'
+    valueBinding: '*parentView.editor.selection.isDefaultColor'
   }),
 
   hightlightButton: RichText.ToolbarButtonView.extend({
     title: 'Highlight',
-    valueBinding: '.parentView.editor.selection.isHighlighted'
+    valueBinding: '*parentView.editor.selection.isHighlighted'
   }),
 
   highlightBackgroundButton: RichText.ToolbarButtonView.extend({
     title: 'Highlight BG',
-    valueBinding: '.parentView.editor.selection.isBackgroundHighlighted'
+    valueBinding: '*parentView.editor.selection.isBackgroundHighlighted'
   }),
 
   highlightBackgroundButton: RichText.ToolbarButtonView.extend({
     title: 'Highlight BG',
-    valueBinding: '.parentView.editor.selection.isBackgroundHighlighted'
+    valueBinding: '*parentView.editor.selection.isBackgroundHighlighted'
   }),
 
   increaseSizeButton: RichText.ToolbarButtonView.extend({
     title: '+',
     buttonBehavior: SC.PUSH_BEHAVIOR,
-    targetBinding: '.parentView.editor.selection',
+    targetBinding: '*parentView.editor.selection',
     action: 'increaseSize',
-    valueBinding: '.parentView.editor.selection.isSizeIncreased'
+    valueBinding: '*parentView.editor.selection.isSizeIncreased'
   }),
 
   decreaseSizeButton: RichText.ToolbarButtonView.extend({
     title: '-',
     buttonBehavior: SC.PUSH_BEHAVIOR,
-    targetBinding: '.parentView.editor.selection',
+    targetBinding: '*parentView.editor.selection',
     action: 'decreaseSize',
-    valueBinding: '.parentView.editor.selection.isSizeDecreased'
+    valueBinding: '*parentView.editor.selection.isSizeDecreased'
   }),
 
   resetSizeButton: RichText.ToolbarButtonView.extend({
     title: '+-',
     buttonBehavior: SC.TOGGLE_ON_BEHAVIOR,
-    valueBinding: '.parentView.editor.selection.isDefaultSize'
+    valueBinding: '*parentView.editor.selection.isDefaultSize'
   }),
 
   superscriptButton: RichText.ToolbarButtonView.extend({
     title: 'Super',
-    valueBinding: '.parentView.editor.selection.isSuperscript'
+    valueBinding: '*parentView.editor.selection.isSuperscript'
   }),
 
   subscriptButton: RichText.ToolbarButtonView.extend({
     title: 'Sub',
-    valueBinding: '.parentView.editor.selection.isSubscript'
+    valueBinding: '*parentView.editor.selection.isSubscript'
   }),
 
   indentButton: RichText.ToolbarButtonView.extend({
     title: 'Indent',
     buttonBehavior: SC.PUSH_BEHAVIOR,
-    targetBinding: '.parentView.editor.selection',
+    targetBinding: '*parentView.editor.selection',
     action: 'indent'
   }),
 
   outdentButton: RichText.ToolbarButtonView.extend({
     title: 'Outdent',
     buttonBehavior: SC.PUSH_BEHAVIOR,
-    targetBinding: '.parentView.editor.selection',
+    targetBinding: '*parentView.editor.selection',
     action: 'outdent'
   }),
 
   orderedListButton: RichText.ToolbarButtonView.extend({
     title: 'OL',
-    valueBinding: '.parentView.editor.selection.isOrderedList'
+    valueBinding: '*parentView.editor.selection.isOrderedList'
   }),
 
   unorderedListButton: RichText.ToolbarButtonView.extend({
     title: 'UL',
-    valueBinding: '.parentView.editor.selection.isUnorderedList'
+    valueBinding: '*parentView.editor.selection.isUnorderedList'
   }),
 
   removeFormattingButton: RichText.ToolbarButtonView.extend({
     title: 'Remove',
     buttonBehavior: SC.PUSH_BEHAVIOR,
-    targetBinding: '.parentView.editor.selection',
+    targetBinding: '*parentView.editor.selection',
     action: 'removeFormatting'
   }),
 
   undoButton: RichText.ToolbarButtonView.extend({
     title: 'Undo',
-    isEnabledBinding: '.parentView.editor.undoAllowed',
+    isEnabledBinding: '*parentView.editor.undoAllowed',
     buttonBehavior: SC.PUSH_BEHAVIOR,
-    targetBinding: '.parentView.editor',
+    targetBinding: '*parentView.editor',
     action: 'undoChange'
   }),
 
   redoButton: RichText.ToolbarButtonView.extend({
     title: 'Redo',
-    isEnabledBinding: '.parentView.editor.redoAllowed',
+    isEnabledBinding: '*parentView.editor.redoAllowed',
     buttonBehavior: SC.PUSH_BEHAVIOR,
-    targetBinding: '.parentView.editor',
+    targetBinding: '*parentView.editor',
     action: 'redoChange'
   })
 
