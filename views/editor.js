@@ -1,6 +1,6 @@
 // ==========================================================================
-// Project:   RichText.RichTextEditorView
-// Copyright: ©2009 My Company, Inc.
+// Project:   RichText - SproutCore RichTextEditor
+// Copyright: ©2010 Peter Wagenet
 // ==========================================================================
 /*globals RichText */
 
