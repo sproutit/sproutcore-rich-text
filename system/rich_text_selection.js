@@ -30,7 +30,7 @@ RichText.RichTextSelection = SC.Object.extend({
 
     if (val !== undefined) {
       this.propertyWillChange('color');
-      var x = editor.iframeExecCommand('forecolor', false, val);
+      var x = editor.execCommand('forecolor', false, val);
       this.propertyDidChange('color');
 
       if(x) editor.changedSelection();
@@ -48,7 +48,7 @@ RichText.RichTextSelection = SC.Object.extend({
 
     if (val !== undefined) {
       this.propertyWillChange('backgroundColor');
-      var x = editor.iframeExecCommand(bgCommand, false, val);
+      var x = editor.execCommand(bgCommand, false, val);
       this.propertyDidChange('backgroundColor');
 
       if(x) editor.changedSelection();
@@ -64,7 +64,7 @@ RichText.RichTextSelection = SC.Object.extend({
 
     if (val !== undefined) {
       this.propertyWillChange('fontSize');
-      var x = editor.iframeExecCommand('fontsize', false, val);
+      var x = editor.execCommand('fontsize', false, val);
       this.propertyDidChange('fontSize');
 
       if(x) editor.changedSelection();
@@ -211,7 +211,7 @@ RichText.RichTextSelection = SC.Object.extend({
     var editor = this.get('editor');
     if (!editor) return;
 
-    editor.iframeExecCommand('indent', false, YES);
+    editor.execCommand('indent', false, YES);
     editor.changedSelection();
   },
 
@@ -219,7 +219,7 @@ RichText.RichTextSelection = SC.Object.extend({
     var editor = this.get('editor');
     if (!editor) return;
 
-    editor.iframeExecCommand('outdent', false, YES);
+    editor.execCommand('outdent', false, YES);
     editor.changedSelection();
   },
 
@@ -227,7 +227,7 @@ RichText.RichTextSelection = SC.Object.extend({
     var editor = this.get('editor');
     if (!editor) return;
 
-    editor.iframeExecCommand('removeformat', false, YES);
+    editor.execCommand('removeformat', false, YES);
     editor.changedSelection();
   },
 
@@ -259,13 +259,13 @@ RichText.RichTextSelection = SC.Object.extend({
 
     if (val !== undefined) {
       this.propertyWillChange(property);
-      var x = editor.iframeExecCommand(type, false, val);
+      var x = editor.execCommand(type, false, val);
       this.propertyDidChange(property);
 
       if(x) editor.changedSelection();
     }
 
-    return editor.iframeQueryState(type);
+    return editor.queryState(type);
   }
 
 }) ;

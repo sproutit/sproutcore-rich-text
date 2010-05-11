@@ -18,8 +18,6 @@ RichText.EditorView = SC.FieldView.extend(
 
   value: null,
 
-  iframeRootResponder: null,
-
   classNames: ['rich-text-editor-view', 'sc-text-field-view', 'text-area'],
 
   editorIsReady: NO,
@@ -45,19 +43,11 @@ RichText.EditorView = SC.FieldView.extend(
 // CoreQuery Accessors
 
   $input: function(){
-    return this.$('iframe');
-  },
-
-  $inputWindow: function(){
-    return this.$input().map(function(){ return this.contentWindow; });
-  },
-
-  $inputDocument: function(){
-    return this.$inputWindow().map(function(){ return this.document; });
+    return this.$('div');
   },
 
   $inputBody: function(){
-    return this.$inputDocument().map(function(){ return this.body; });
+    return this.$input();
   },
 
 // fieldValue actions
@@ -121,7 +111,7 @@ RichText.EditorView = SC.FieldView.extend(
 
   setFieldValue: function(newValue) {
     this.propertyWillChange('fieldValue');
-    if (this.get('editorIsReady')) this.$inputBody().html(newValue.toString());
+    if (this.get('editorIsReady')) this.$inputBody().html(newValue.toString()+"<p><br/></p>");
     this.propertyDidChange('fieldValue');
     return this;
   },
@@ -149,172 +139,74 @@ RichText.EditorView = SC.FieldView.extend(
 // Rendering
 
   render: function(context, firstTime) {
-    arguments.callee.base.apply(this,arguments) ;
+    sc_super();
+    this._renderField(context, firstTime);
+  },
 
-    var name = SC.guidFor(this);
-
-    // TODO: Find a way to set this without calling fieldValue which triggers sanitizing
-
-    // // always have at least an empty string
-    // var v = this.get('fieldValue');
-    // if (SC.none(v)) v = '';
-    // 
-    // // update layer classes always
-    // context.setClass('not-empty', v.length > 0);
-
+  _renderField: function(context, firstTime) {
+    var name = this.get('layerId');
 
     if (firstTime) {
       context.push('<span class="border"></span>');
-
-      // Render the iframe itself, and close off the padding.
-      context.push('<iframe name="%@"></iframe></span>'.fmt(name));
+      context.push('<span class="padding"><div name="%@" contenteditable="true"></div></span>'.fmt(name));
     }
   },
 
   didCreateLayer: function() {
-    SC.Event.add(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
-  },
-
-  _field_checkIFrameDidLoad: function() {
-    var iframe = this.$input().get(0);
-
-    if (iframe.contentWindow && iframe.contentWindow.document) {
-      this.iframeDidLoad();
-    } else { 
-      this.invokeLater('_field_checkIFrameDidLoad', 500);
-    }
-  },
-
-  iframeDidLoad: function() {
-    if (!this.get('editorIsReady')) {
-      if (this.get('loadStylesheetsInline')) {
-        this._loadStylesheets();
-      } else {
-        this._setupEditor();
-      }
-    }
-  },
-
-  _loadStylesheets: function(){
-    var stylesheets = this.get('stylesheets'), stylesheet_url;
-    this._pendingStylesheets = stylesheets.length;
-
-    for(idx=0; idx < stylesheets.length; idx++) {
-      stylesheet_url = stylesheets[idx];
-
-      if (RichText.EditorView.loadedStylesheets[stylesheet_url]) {
-        // already loaded
-        this._stylesheetDidLoad(stylesheet_url);
-      } else {
-        // Need to load
-        RichText.EditorView.loadStylesheet(stylesheet_url, this, '_stylesheetDidLoad');
-      }
-    }
-  },
-
-  _stylesheetDidLoad: function(url){
-    this._pendingStylesheets -= 1;
-    if (this._pendingStylesheets <= 0) this._setupEditor();
-  },
-
-  _writeDocument: function(headers){
-    if (!headers) headers = '';
-    var inputDocumentInstance = this.$inputDocument().get(0);
-
-    inputDocumentInstance.open("text/html","replace");
-
-    inputDocumentInstance.write("<html><head>%@</head><body></body></html>".fmt(headers));
-
-    if(!SC.browser.msie) {
-      // This fails in IE for unknown reasons
-      inputDocumentInstance.close();
-    }
+    this._setupEditor();
   },
 
   _setupEditor: function(){
     // Already setup
     if (this.get('editorIsReady')) return;
 
-    var inputDocument = this.$inputDocument(),
-        inputDocumentInstance = inputDocument.get(0),
-        focusTarget = (SC.browser.msie) ? this.$input() : inputDocument,
-        stylesheets = this.get('stylesheets'),
-        stylesheet_url, headers = '', responder, idx;
-
-    // This has occasionally been an issue. Not sure what to do about it yet.
-    if (!inputDocumentInstance) throw "No inputDocumentInstance!";
-
-    // Tried using contenteditable but it had a weird bug where you had to type something before you could delete in a field
-    try {
-      inputDocumentInstance.designMode = 'on';
-    } catch ( e ) {
-      // Will fail on Gecko if the editor is placed in an hidden container element
-      // The design mode will be set ones the editor is focused
-      inputDocument.focus(function() { inputDocumentInstance.designMode(); } );
-    }
-
-    if (this.get('loadStylesheetsInline')) {
-      headers += "<style type='text/css'>\n";
-      for(idx=0; idx < stylesheets.length; idx++) {
-        stylesheet_url = stylesheets[idx];
-        headers += "/* BEGIN %@ */\n\n".fmt(stylesheet_url);
-        headers += RichText.EditorView.loadedStylesheets[stylesheet_url];
-        headers += "/* END %@ */\n\n".fmt(stylesheet_url);
-      }
-      headers += "</style>\n";
-    } else {
-      for(idx=0; idx < stylesheets.length; idx++) {
-        headers += '<link rel="stylesheet" href="%@" type="text/css" charset="utf-8">\n'.fmt(stylesheets[idx]);
-      }
-    }
-
-    this._writeDocument(headers);
-
     this.set('editorIsReady', YES);
 
     this.setFieldValue(this.get('fieldValue'));
 
-    responder = SC.IFrameRootResponder.create({ iframe: this.$input().get(0), target: this });
-    responder.setup();
-    this.set('iframeRootResponder', responder);
-
-    SC.Event.add(inputDocument, 'paste', this, this.pasteCaught);
-    SC.Event.add(focusTarget, 'focus', this, this._field_fieldDidFocus);
-    SC.Event.add(inputDocument, 'blur', this, this._field_fieldDidBlur);
+    var input = this.$input();
+    SC.Event.add(input, 'keydown', this, this.keyDown);
+    SC.Event.add(input, 'paste', this, this.pasteCaught);
+    SC.Event.add(input, 'focus', this, this._field_fieldDidFocus);
+    SC.Event.add(input, 'blur', this, this._field_fieldDidBlur);
   },
 
   willDestroyLayer: function() {
-    var inputDocument = this.$inputDocument(),
-        focusTarget = (SC.browser.msie) ? this.$input() : inputDocument,
-        responder = this.get('iframeRootResponder');
-
-    responder.teardown();
-    this.set('iframeRootResponder', null);
-
-    SC.Event.remove(inputDocument, 'blur', this, this._field_fieldDidBlur);
-    SC.Event.remove(focusTarget, 'focus', this, this._field_fieldDidFocus);
-    SC.Event.remove(inputDocument, 'paste', this, this.pasteCaught);
-    SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
+    var input = this.$input();
+    SC.Event.remove(input, 'blur', this, this._field_fieldDidBlur);
+    SC.Event.remove(input, 'focus', this, this._field_fieldDidFocus);
+    SC.Event.remove(input, 'paste', this, this.pasteCaught);
+    SC.Event.remove(input, 'keydown', this, this.keyDown);
   },
 
   keyDown: function(evt) {
     if (evt.metaKey) {
+      var handled = NO;
       switch(SC.PRINTABLE_KEYS[evt.which]) {
         case 'b':
-          this.set('selectionIsBold', !this.get('selectionIsBold'));
-          return YES;
+          this.get('selection').set('isBold', !this.getPath('selection.isBold'));
+          handled = YES;
+          break;
         case 'u':
-          this.set('selectionIsUnderlined', !this.get('selectionIsUnderlined'));
-          return YES;
+          this.get('selection').set('isUnderlined', !this.getPath('selection.isUnderlined'));
+          handled = YES;
+          break;
         case 'i':
-          this.set('selectionIsItalicized', !this.get('selectionIsItalicized'));
-          return YES;
+          this.get('selection').set('isItalicized', !this.getPath('selection.isItalicized'));
+          handled = YES;
+          break;
         case 'z':
           evt.shiftKey ? this.redoChange() : this.undoChange();
-          return YES;
+          handled = YES;
+          break;
         case 'y':
           this.redoChange();
-          return YES;
+          handled = YES;
+          break;
+      }
+      if (handled) {
+        evt.stop();
+        return YES;
       }
     } else if (evt.which === SC.Event.KEY_TAB) {
       evt.shiftKey ? this.selectionOutdent() : this.selectionIndent();
@@ -333,6 +225,10 @@ RichText.EditorView = SC.FieldView.extend(
     //}
   },
 
+  mouseDown: function(evt){
+    evt.allowDefault();
+  },
+
   mouseUp: function(evt){
     this.querySelection();
     this.queryCursorPos();
@@ -349,14 +245,10 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   _loseBlur: function(){
-    if (this._isFocused) {
-      this._isFocused = NO;
-      SC.RootResponder.responder.set('richTextEditorHasFocus', NO);
-    }
+    this._isFocused = NO;
   },
 
   _field_fieldDidFocus: function(){
-    this.becomeFirstResponder();
   },
 
   _field_fieldDidBlur: function(){
@@ -364,15 +256,7 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   willBecomeKeyResponderFrom: function(keyView) {
-    // focus the text field.
-    if (!this._isFocused) {
-      this._isFocused = YES ;
-      this.becomeFirstResponder();
-      if (this.get('isVisibleInWindow')) {
-        SC.RootResponder.responder.set('richTextEditorHasFocus', YES);
-        this.$inputWindow().get(0).focus();
-      }
-    }
+    this._isFocused = YES ;
   },
 
   willLoseKeyResponderTo: function(responder) {
@@ -393,14 +277,14 @@ RichText.EditorView = SC.FieldView.extend(
         selectionElement = null;
 
     if (SC.browser.msie) {
-      rawSelection = this.$inputDocument().get(0).selection.createRange();
+      rawSelection = this.$input().get(0).selection.createRange();
       selectionText = rawSelection.text;
 
       if (SC.none(selection)) selection = '';
 
       selectionElement = rawSelection.parentElement();
     } else {
-      rawSelection = this.$inputWindow().get(0).getSelection();
+      rawSelection = window.getSelection();
 
       if (rawSelection.rangeCount > 0) {
         var selectionRange = rawSelection.getRangeAt(0),
@@ -444,12 +328,11 @@ RichText.EditorView = SC.FieldView.extend(
 
   // Based on http://niichavo.wordpress.com/2009/01/06/contentEditable-div-cursor-position/
   queryCursorPos: function() {
-    var inputWindow = this.$inputWindow().get(0),
-        inputDocument = this.$inputDocument().get(0),
+    var inputInstance = this.$input().get(0),
         cursorPos;
 
-    if (inputWindow.getSelection) {
-      var selObj = inputWindow.getSelection(),
+    if (inputInstance.getSelection) {
+      var selObj = inputInstance.getSelection(),
           anchor = selObj.anchorNode,
           offset = selObj.anchorOffset;
 
@@ -459,8 +342,8 @@ RichText.EditorView = SC.FieldView.extend(
       }
 
       cursorPos = anchor ? (this._anchorNodeOffset(anchor) + offset) : null;
-    } else if (inputDocument.selection) {
-      var range = inputDocument.selection.createRange();
+    } else if (inputInstance.selection) {
+      var range = inputInstance.selection.createRange();
 
       range.moveStart('sentence', -1000000);
 
@@ -471,7 +354,7 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   _anchorNodeOffset: function(node) {
-    if (node === this.$inputBody().get(0)) return 0;
+    if (node === this.$input().get(0)) return 0;
 
     var offset = this._anchorNodeOffset(node.parentNode),
         siblings = node.parentNode.childNodes,
@@ -513,10 +396,13 @@ RichText.EditorView = SC.FieldView.extend(
 
 // Editor actions
 
-  // borrowed with slight changes from jQuery
   getStyle: function(elem, name, force) {
-    var defaultView = this.$inputWindow().get(0),
-        ret, style = elem.style;
+    return this._getStyleWithWindow(window, elem, name, force);
+  },
+
+  // borrowed with slight changes from jQuery
+  _getStyleWithWindow: function(defaultView, elem, name, force) {
+    var ret, style = elem.style;
 
     // A helper method for determining if an element's values are broken
     function color( elem ) {
@@ -653,104 +539,44 @@ RichText.EditorView = SC.FieldView.extend(
 // Formatting properties
 
   undoAllowed: function() {
-    return this.iframeQueryEnabled('undo');
+    return this.queryEnabled('undo');
   }.property('selectionText').cacheable(),
 
   redoAllowed: function() {
-    return this.iframeQueryEnabled('redo');
+    return this.queryEnabled('redo');
   }.property('selectionText').cacheable(),
 
 // Formatting commands
 
   undoChange: function() {
-    this.iframeExecCommand('undo', false, YES);
+    this.execCommand('undo', false, YES);
     this.changedSelection();
   },
 
   redoChange: function() {
-    this.iframeExecCommand('redo', false, YES);
+    this.execCommand('redo', false, YES);
     this.changedSelection();
   },
 
-  iframeExecCommand: function() {
+  execCommand: function() {
     if (!this.get('editorIsReady')) return null;
-    var inputDocumentInstance = this.$inputDocument().get(0);
-    return inputDocumentInstance.execCommand.apply(inputDocumentInstance, arguments);
+    return window.document.execCommand.apply(window.document, arguments);
   },
 
-  iframeQueryState: function() {
+  queryState: function() {
     if (!this.get('editorIsReady')) return null;
-    var inputDocumentInstance = this.$inputDocument().get(0);
-    return inputDocumentInstance.queryCommandState.apply(inputDocumentInstance, arguments);
+    return window.document.queryCommandState.apply(window.document, arguments);
   },
 
-  iframeQueryEnabled: function() {
+  // FIXME: Make this actually work
+  queryEnabled: function() {
     if (!this.get('editorIsReady')) return null;
-    var inputDocumentInstance = this.$inputDocument().get(0);
-    return inputDocumentInstance.queryCommandEnabled.apply(inputDocumentInstance, arguments);
+    return window.document.queryCommandEnabled.apply(window.document, arguments);
   },
 
   init: function(){
     sc_super();
     this.set('selection', this.get('exampleSelection').create({ editor: this }));
-  }
-
-});
-
-RichText.EditorView.mixin({
-
-  loadedStylesheets: {},
-  pendingStylesheets: [],
-  stylesheetObservers: {},
-
-  stylesheetIsLoaded: function(url) {
-    return !!this.loadedStylesheets[url];
-  },
-
-  stylesheetIsLoading: function(url) {
-    return this.pendingStylesheets.indexOf(url) !== -1;
-  },
-
-  loadStylesheet: function(url, notify_target, notify_method){
-    if(notify_target && notify_method) this.addStylesheetObserver(url, notify_target, notify_method);
-
-    if (!this.stylesheetIsLoaded(url) && !this.stylesheetIsLoading(url)) {
-      this.pendingStylesheets.push(url);
-      return SC.Request.getUrl(url)
-                       .notify(this, this._stylesheetDidLoad, { url: url })
-                       .send();
-    }
-  },
-
-  addStylesheetObserver: function(url, target, method) {
-    var observers = this.stylesheetObservers;
-
-    if (!observers[url]) observers[url] = [];
-    observers[url].push({ target: target, method: method });
-
-    return YES;
-  },
-
-  _stylesheetDidLoad: function(request, params){
-    var response = request.get('response'),
-        url = params.url,
-        observers, observer, idx;
-
-    this.loadedStylesheets[url] = response;
-    this.pendingStylesheets.removeObject(url);
-    this._notifyLoad(url);
-  },
-
-  _notifyLoad: function(url){
-    var observers, observer;
-
-    observers = this.stylesheetObservers[url];
-    if (observers) {
-      for(idx=0; idx < observers.length; idx++) {
-        observer = observers[idx];
-        observer.target[observer.method](url);
-      }
-    }
   }
 
 });

@@ -1,6 +1,6 @@
 SC.TextFieldView = SC.TextFieldView.extend({
   didLoseKeyResponderTo: function(keyView) {
-    // Don't blur if we're now in an RTE
-    if (!SC.RootResponder.responder.get('richTextEditorHasFocus')) this.$input()[0].blur() ;
+    // Don't blur if we're now in an iFrames
+    if (!SC.RootResponder.responder.get('iframeHasFocus')) this.$input()[0].blur() ;
   }
 });
