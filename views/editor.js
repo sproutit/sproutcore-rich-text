@@ -301,13 +301,13 @@ RichText.EditorView = SC.FieldView.extend(
     if (evt.metaKey) {
       switch(SC.PRINTABLE_KEYS[evt.which]) {
         case 'b':
-          this.set('selectionIsBold', !this.get('selectionIsBold'));
+          this.get('selection').set('isBold', !this.getPath('selection.isBold'));
           return YES;
         case 'u':
-          this.set('selectionIsUnderlined', !this.get('selectionIsUnderlined'));
+          this.get('selection').set('isUnderlined', !this.getPath('selection.isUnderlined'));
           return YES;
         case 'i':
-          this.set('selectionIsItalicized', !this.get('selectionIsItalicized'));
+          this.get('selection').set('isItalicized', !this.getPath('selection.isItalicized'));
           return YES;
         case 'z':
           evt.shiftKey ? this.redoChange() : this.undoChange();
