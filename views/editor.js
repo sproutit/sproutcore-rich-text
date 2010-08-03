@@ -317,7 +317,8 @@ RichText.EditorView = SC.FieldView.extend(
           return YES;
       }
     } else if (evt.which === SC.Event.KEY_TAB) {
-      evt.shiftKey ? this.selectionOutdent() : this.selectionIndent();
+      var selection = this.get('selection');
+      evt.shiftKey ? selection.outdent() : selection.indent();
       return YES;
     }
 
