@@ -172,7 +172,7 @@ RichText.EditorView = SC.FieldView.extend(
   },
 
   didCreateLayer: function() {
-    SC.Event.add(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
+    this._field_checkIFrameDidLoad();
   },
 
   _field_checkIFrameDidLoad: function() {
@@ -294,7 +294,6 @@ RichText.EditorView = SC.FieldView.extend(
     SC.Event.remove(inputDocument, 'blur', this, this._field_fieldDidBlur);
     SC.Event.remove(focusTarget, 'focus', this, this._field_fieldDidFocus);
     SC.Event.remove(inputDocument, 'paste', this, this.pasteCaught);
-    SC.Event.remove(this.$input(), 'load', this, this._field_checkIFrameDidLoad);
   },
 
   keyDown: function(evt) {
