@@ -1,6 +1,6 @@
 // ==========================================================================
 // Project:   RichText - SproutCore RichTextEditor
-// Copyright: ©2009 Peter Wagenet
+// Copyright: ©2010 Peter Wagenet
 // ==========================================================================
 /*globals RichText */
 
@@ -14,7 +14,7 @@ RichText = SC.Object.create(
   /** @scope RichText.prototype */ {
 
   NAMESPACE: 'RichText',
-  VERSION: '0.3.3',
+  VERSION: '0.4.0',
 
   // TODO: Add global constants or singleton objects needed by your app here.
 
